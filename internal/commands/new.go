@@ -27,7 +27,7 @@ var newCmd = &cobra.Command{
 		s.Start()
 		
 		// 1. Clone repository from GitHub
-		// Menggunakan branch main dari repo boilerplate
+		// Using the main branch from boilerplate repo
 		cloneCmd := exec.Command("git", "clone", "https://github.com/kodia-studio/kodia.git", projectPath)
 		if err := cloneCmd.Run(); err != nil {
 			s.Stop()
@@ -59,7 +59,7 @@ var newCmd = &cobra.Command{
 		fmt.Println()
 		color.Yellow("Next steps:")
 		fmt.Printf("  1. cd %s\n", projectName)
-		fmt.Printf("  2. Perbarui nama module di backend/go.mod dengan nama project Anda\n")
+		fmt.Printf("  2. Update module name in backend/go.mod with your project name\n")
 		fmt.Printf("  3. kodia dev\n")
 		fmt.Println()
 		color.Cyan("Happy coding with Kodia! 🐨")

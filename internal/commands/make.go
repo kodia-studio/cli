@@ -8,10 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var makeCmd = &cobra.Command{
-	Use:   "make",
-	Short: "Generate boilerplate code for your project",
-}
+
 
 var makeHandlerCmd = &cobra.Command{
 	Use:   "make:handler [Name]",

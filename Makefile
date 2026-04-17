@@ -4,11 +4,11 @@ BINARY_NAME=kodia
 
 # Build the binary
 build:
-	go build -o bin/$(BINARY_NAME) main.go
+	go build -o bin/$(BINARY_NAME) ./kodia
 
 # Install the binary to GOPATH/bin
 install:
-	go install main.go
+	go install ./kodia
 
 # Remove build artifacts
 clean:
