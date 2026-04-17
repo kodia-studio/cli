@@ -1,4 +1,4 @@
-module github.com/kodia-studio/kodia
+module github.com/kodia-studio/cli
 
 go 1.25.0
 

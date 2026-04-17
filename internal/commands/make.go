@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/fatih/color"
-	"github.com/kodia-studio/kodia/internal/scaffolding"
+	"github.com/kodia-studio/cli/internal/scaffolding"
 	"github.com/spf13/cobra"
 )
 

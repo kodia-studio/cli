@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kodia-studio/kodia/internal/commands"
+	"github.com/kodia-studio/cli/internal/commands"
 )
 
 func main() {
