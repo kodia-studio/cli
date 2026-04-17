@@ -27,8 +27,8 @@ var newCmd = &cobra.Command{
 		s.Start()
 		
 		// 1. Clone repository from GitHub
-		// Menggunakan branch main dari repo Anda
-		cloneCmd := exec.Command("git", "clone", "https://github.com/andiaryatno/framework-kodia.git", projectPath)
+		// Menggunakan branch main dari repo boilerplate
+		cloneCmd := exec.Command("git", "clone", "https://github.com/kodia-studio/kodia.git", projectPath)
 		if err := cloneCmd.Run(); err != nil {
 			s.Stop()
 			color.Red("Failed to clone repository. Is git installed? Error: %v", err)
@@ -41,9 +41,8 @@ var newCmd = &cobra.Command{
 		s.Suffix = "  Cleaning up template files..."
 		s.Restart()
 		
-		// 2. Remove .git to start fresh, and remove the CLI folder from the clone
+		// 2. Remove .git to start fresh
 		os.RemoveAll(filepath.Join(projectPath, ".git"))
-		os.RemoveAll(filepath.Join(projectPath, "kodia-cli")) // Not needed for the end user project
 		
 		s.Stop()
 		
