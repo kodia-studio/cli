@@ -60,7 +60,8 @@ var newCmd = &cobra.Command{
 		color.Yellow("Next steps:")
 		fmt.Printf("  1. cd %s\n", projectName)
 		fmt.Printf("  2. Update module name in backend/go.mod with your project name\n")
-		fmt.Printf("  3. kodia dev\n")
+		fmt.Printf("  3. cd frontend && npm install && cd ..\n")
+		fmt.Printf("  4. kodia dev\n")
 		fmt.Println()
 		color.Cyan("Happy coding with Kodia! 🐨")
 	},
