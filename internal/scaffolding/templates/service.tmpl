@@ -1,0 +1,38 @@
+package services
+
+import (
+	"context"
+
+	"github.com/kodia/framework/backend/internal/core/domain"
+	"github.com/kodia/framework/backend/internal/core/ports"
+	"github.com/kodia/framework/backend/pkg/pagination"
+	"go.uber.org/zap"
+)
+
+type {{.LowerName}}Service struct {
+	repo ports.{{.Name}}Repository
+	log  *zap.Logger
+}
+
+func New{{.Name}}Service(repo ports.{{.Name}}Repository, log *zap.Logger) ports.{{.Name}}Service {
+	return &{{.LowerName}}Service{
+		repo: repo,
+		log:  log,
+	}
+}
+
+func (s *{{.LowerName}}Service) GetAll(ctx context.Context, params pagination.Params) ([]domain.{{.Name}}, int64, error) {
+	return s.repo.FindAll(ctx, params)
+}
+
+func (s *{{.LowerName}}Service) GetByID(ctx context.Context, id string) (*domain.{{.Name}}, error) {
+	return s.repo.FindByID(ctx, id)
+}
+
+func (s *{{.LowerName}}Service) Delete(ctx context.Context, id string) error {
+	_, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	return s.repo.Delete(ctx, id)
+}
