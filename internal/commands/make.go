@@ -8,6 +8,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/kodia-studio/cli/internal/astutil"
 	"github.com/kodia-studio/cli/internal/scaffolding"
+	"github.com/kodia-studio/cli/internal/validation"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +20,13 @@ var makeHandlerCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 		dest := filepath.Join("backend", "internal", "adapters", "http", "handlers", data.LowerName+"_handler.go")
 		
@@ -35,6 +43,13 @@ var makeServiceCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 		dest := filepath.Join("backend", "internal", "core", "services", data.LowerName+"_service.go")
 		
@@ -51,6 +66,13 @@ var makeRepositoryCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 		dest := filepath.Join("backend", "internal", "adapters", "repository", "postgres", data.LowerName+"_repository.go")
 		
@@ -67,6 +89,13 @@ var makePageCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		route := args[0]
+
+		// Validate route name to prevent code injection
+		if err := validation.ValidateName(route); err != nil {
+			color.Red("Error: Invalid route name - %v", err)
+			return
+		}
+
 		// For pages, the route is usually the lower name or plural name
 		data := scaffolding.BuildData(route)
 		dest := filepath.Join("frontend", "src", "routes", "(app)", route, "+page.svelte")
@@ -84,6 +113,13 @@ var makeMigrationCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 		
 		baseDest := filepath.Join("backend", "internal", "infrastructure", "database", "migrations", "sql")
@@ -102,6 +138,13 @@ var makeFeatureCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		color.Magenta("🔥 Scaffolding full feature: %s", name)
 		
 		// Run all generators
@@ -206,6 +249,13 @@ var makeMiddlewareCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 		dest := filepath.Join("backend", "internal", "adapters", "http", "middleware", data.LowerName+".go")
 		
@@ -224,6 +274,13 @@ var makeValidatorCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 		dest := filepath.Join("backend", "pkg", "validator", data.LowerName+".go")
 		
@@ -242,6 +299,13 @@ var makeJobCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 		dest := filepath.Join("backend", "internal", "core", "jobs", data.LowerName+"_job.go")
 		
@@ -268,6 +332,13 @@ var makeCronCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 		dest := filepath.Join("backend", "internal", "core", "jobs", data.LowerName+"_cron.go")
 		
@@ -294,7 +365,15 @@ var makeComponentCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		pathName := args[0]
-		data := scaffolding.BuildData(filepath.Base(pathName))
+		componentName := filepath.Base(pathName)
+
+		// Validate component name to prevent code injection
+		if err := validation.ValidateName(componentName); err != nil {
+			color.Red("Error: Invalid component name - %v", err)
+			return
+		}
+
+		data := scaffolding.BuildData(componentName)
 		
 		// Determine directory and filename
 		dir := filepath.Dir(pathName)
@@ -318,6 +397,13 @@ var makeLayoutCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		route := args[0]
+
+		// Validate route name to prevent code injection
+		if err := validation.ValidateName(route); err != nil {
+			color.Red("Error: Invalid route name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData("Layout")
 		dest := filepath.Join("frontend", "src", "routes", route, "+layout.svelte")
 		
@@ -336,6 +422,19 @@ var makeTestCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		testType := args[0]
 		name := args[1]
+
+		// Validate test type
+		if testType != "service" && testType != "handler" {
+			color.Red("Error: Invalid test type '%s'. Use 'service' or 'handler'.", testType)
+			return
+		}
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 
 		var dest string
@@ -348,9 +447,6 @@ var makeTestCmd = &cobra.Command{
 		case "handler":
 			dest = filepath.Join("backend", "internal", "adapters", "http", "handlers", data.LowerName+"_handler_test.go")
 			template = "handler_test.tmpl"
-		default:
-			color.Red("Error: Invalid test type. Use 'service' or 'handler'.")
-			return
 		}
 
 		color.Cyan("Generating %s test for %s...", testType, data.Name)
@@ -388,6 +484,13 @@ var makeMailCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 
 		// 1. Generate Go Mailer Logic
@@ -417,6 +520,13 @@ var makeEventCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateEventName(name); err != nil {
+			color.Red("Error: Invalid event name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 
 		dest := filepath.Join("backend", "internal", "core", "events", data.LowerName+"_event.go")
@@ -436,9 +546,22 @@ var makeListenerCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		eventName, _ := cmd.Flags().GetString("event")
 		if eventName == "" {
 			color.Red("Error: --event flag is required")
+			return
+		}
+
+		// Validate eventName to prevent injection attacks
+		if err := validation.ValidateEventName(eventName); err != nil {
+			color.Red("Error: Invalid event name - %v", err)
 			return
 		}
 
@@ -446,17 +569,13 @@ var makeListenerCmd = &cobra.Command{
 		// 1. Generate Listener Logic
 		dest := filepath.Join("backend", "internal", "core", "listeners", data.LowerName+"_listener.go")
 		color.Cyan("Generating Listener %s...", data.Name)
-		
-		// Internal helper to handle custom struct for template
-		// This is a bit of a hack since scaffolding.Generate expects TemplateData
-		// But I'll just use a temporary template rewrite or just keep it simple.
-		// Actually, let's just use TemplateData and handle EventName manually if possible.
+
 		if err := scaffolding.Generate("listener.tmpl", dest, data); err != nil {
 			color.Red("Error: %v", err)
 			return
 		}
-		
-		// Update template manually for EventName for now
+
+		// Update template manually for EventName - input is validated above
 		content, _ := os.ReadFile(dest)
 		newContent := strings.ReplaceAll(string(content), "{{.EventName}}", eventName)
 		os.WriteFile(dest, []byte(newContent), 0644)
@@ -479,6 +598,13 @@ var makeSeederCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
 		data := scaffolding.BuildData(name)
 
 		// 1. Generate Seeder Logic

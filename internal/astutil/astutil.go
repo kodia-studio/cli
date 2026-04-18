@@ -11,10 +11,46 @@ import (
 	"strings"
 
 	"github.com/kodia-studio/cli/internal/scaffolding"
+	"github.com/kodia-studio/cli/internal/validation"
 )
+
+// validateTemplateData ensures template data is safe for code generation.
+// This prevents injection attacks through AST manipulation.
+func validateTemplateData(data scaffolding.TemplateData) error {
+	// Validate Name - used in code generation (PascalCase)
+	if err := validation.ValidateName(data.Name); err != nil {
+		return fmt.Errorf("invalid template data - Name: %w", err)
+	}
+
+	// Validate LowerName - used as variable names (lowercase, alphanumeric + underscore)
+	if err := validation.ValidateIdentifier(data.LowerName); err != nil {
+		return fmt.Errorf("invalid template data - LowerName: %w", err)
+	}
+
+	// Validate Plural - used in code generation
+	if err := validation.ValidateName(data.Plural); err != nil {
+		return fmt.Errorf("invalid template data - Plural: %w", err)
+	}
+
+	// Validate LowerPlural - used as variable/constant names
+	if err := validation.ValidateIdentifier(data.LowerPlural); err != nil {
+		return fmt.Errorf("invalid template data - LowerPlural: %w", err)
+	}
+
+	// ProjectName should be a valid identifier
+	if err := validation.ValidateIdentifier(data.ProjectName); err != nil {
+		return fmt.Errorf("invalid template data - ProjectName: %w", err)
+	}
+
+	return nil
+}
 
 // InjectDependencyInjection updates main.go with new repo, service, and handler
 func InjectDependencyInjection(mainPath string, data scaffolding.TemplateData) error {
+	// Validate template data to prevent code injection
+	if err := validateTemplateData(data); err != nil {
+		return err
+	}
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, mainPath, nil, parser.ParseComments)
 	if err != nil {
@@ -79,6 +115,11 @@ func InjectAuth(mainPath string) error {
 
 // InjectJobRegistration updates worker/main.go with new job handler
 func InjectJobRegistration(workerMainPath string, data scaffolding.TemplateData, isCron bool) error {
+	// Validate template data to prevent code injection
+	if err := validateTemplateData(data); err != nil {
+		return err
+	}
+
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, workerMainPath, nil, parser.ParseComments)
 	if err != nil {
@@ -253,6 +294,11 @@ func updateNewRouterCall(body *ast.BlockStmt, handlerVar string) {
 
 // InjectRouteRegistration updates router.go with new handler field and routes
 func InjectRouteRegistration(routerPath string, data scaffolding.TemplateData) error {
+	// Validate template data to prevent code injection
+	if err := validateTemplateData(data); err != nil {
+		return err
+	}
+
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, routerPath, nil, parser.ParseComments)
 	if err != nil {
@@ -487,6 +533,14 @@ func addRouteGroup(file *ast.File, data scaffolding.TemplateData) {
 
 // InjectListenerRegistration registers a listener for an event in registry.go
 func InjectListenerRegistration(registryPath string, eventName string, listenerName string) error {
+	// Validate event name and listener name to prevent code injection
+	if err := validation.ValidateEventName(eventName); err != nil {
+		return fmt.Errorf("invalid event name: %w", err)
+	}
+	if err := validation.ValidateName(listenerName); err != nil {
+		return fmt.Errorf("invalid listener name: %w", err)
+	}
+
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, registryPath, nil, parser.ParseComments)
 	if err != nil {
@@ -579,6 +633,11 @@ func InjectListenerRegistration(registryPath string, eventName string, listenerN
 
 // InjectSeederRegistration registers a new seeder in registry.go
 func InjectSeederRegistration(registryPath string, name string) error {
+	// Validate seeder name to prevent code injection
+	if err := validation.ValidateName(name); err != nil {
+		return fmt.Errorf("invalid seeder name: %w", err)
+	}
+
 	fset := token.NewFileSet()
 	node, err := parser.ParseFile(fset, registryPath, nil, parser.ParseComments)
 	if err != nil {

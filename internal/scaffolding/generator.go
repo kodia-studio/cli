@@ -2,6 +2,7 @@ package scaffolding
 
 import (
 	"bytes"
+	"embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,6 +12,10 @@ import (
 
 	"github.com/fatih/color"
 )
+
+// Embed all template files into the binary at compile time
+//go:embed templates/*.tmpl
+var templateFS embed.FS
 
 // TemplateData holds the variables passed into the `.tmpl` files
 type TemplateData struct {
@@ -36,33 +41,11 @@ func Generate(templatePath, destPath string, data TemplateData) error {
 		return nil
 	}
 
-	// Read template content dynamically. In a real-world CLI, 
-	// we would bundle templates using `go:embed`. For now, we read from disk.
-	// We'll read from `internal/scaffolding/templates/`
-	
-	// Ensure we read from the current CLI root
-	pwd, _ := os.Getwd()
-	// Heuristic: check multiple common locations for templates
-	possiblePaths := []string{
-		filepath.Join(pwd, "internal", "scaffolding", "templates", templatePath),
-		"/Users/andiaryatno/Kodia/Framework/cli/internal/scaffolding/templates/" + templatePath, // Absolute fallback for dev
-	}
-
-	var tmplPath string
-	for _, p := range possiblePaths {
-		if _, err := os.Stat(p); err == nil {
-			tmplPath = p
-			break
-		}
-	}
-
-	if tmplPath == "" {
-		return fmt.Errorf("could not find template: %s", templatePath)
-	}
-
-	tmplContent, err := os.ReadFile(tmplPath)
+	// Read template content from embedded filesystem
+	tmplFile := filepath.Join("templates", templatePath)
+	tmplContent, err := templateFS.ReadFile(tmplFile)
 	if err != nil {
-		return fmt.Errorf("failed to read template %s: %w", tmplPath, err)
+		return fmt.Errorf("could not find template %s: %w", templatePath, err)
 	}
 
 	t, err := template.New("scaffold").Parse(string(tmplContent))
