@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/kodia-studio/cli/internal/astutil"
@@ -374,4 +376,131 @@ func init() {
 	rootCmd.AddCommand(makeComponentCmd)
 	rootCmd.AddCommand(makeLayoutCmd)
 	rootCmd.AddCommand(makeTestCmd)
+	rootCmd.AddCommand(makeMailCmd)
+	rootCmd.AddCommand(makeEventCmd)
+	rootCmd.AddCommand(makeListenerCmd)
+	rootCmd.AddCommand(makeSeederCmd)
+}
+
+var makeMailCmd = &cobra.Command{
+	Use:   "make:mail [Name]",
+	Short: "Create a new Mailer class and HTML template",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		data := scaffolding.BuildData(name)
+
+		// 1. Generate Go Mailer Logic
+		mailDest := filepath.Join("backend", "internal", "core", "services", "mail", data.LowerName+"_mail.go")
+		color.Cyan("Generating Mailer logic for %s...", data.Name)
+		if err := scaffolding.Generate("mail.tmpl", mailDest, data); err != nil {
+			color.Red("Error: %v", err)
+			return
+		}
+
+		// 2. Generate HTML Template
+		htmlDest := filepath.Join("backend", "resources", "mail", data.LowerName+".html")
+		color.Cyan("Generating HTML template for %s...", data.Name)
+		if err := scaffolding.Generate("mail_html.tmpl", htmlDest, data); err != nil {
+			color.Red("Error: %v", err)
+			return
+		}
+
+		color.Green("✨ Mailer %s created successfully! 📧", data.Name)
+		color.Yellow("Don't forget to: Register the mailer in your service or handler.")
+	},
+}
+
+var makeEventCmd = &cobra.Command{
+	Use:   "make:event [Name]",
+	Short: "Create a new Event class",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		data := scaffolding.BuildData(name)
+
+		dest := filepath.Join("backend", "internal", "core", "events", data.LowerName+"_event.go")
+		color.Cyan("Generating Event %s...", data.Name)
+		if err := scaffolding.Generate("event.tmpl", dest, data); err != nil {
+			color.Red("Error: %v", err)
+			return
+		}
+
+		color.Green("✨ Event %s created successfully! 📡", data.Name)
+	},
+}
+
+var makeListenerCmd = &cobra.Command{
+	Use:   "make:listener [Name]",
+	Short: "Create a new Listener class",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		eventName, _ := cmd.Flags().GetString("event")
+		if eventName == "" {
+			color.Red("Error: --event flag is required")
+			return
+		}
+
+		data := scaffolding.BuildData(name)
+		// 1. Generate Listener Logic
+		dest := filepath.Join("backend", "internal", "core", "listeners", data.LowerName+"_listener.go")
+		color.Cyan("Generating Listener %s...", data.Name)
+		
+		// Internal helper to handle custom struct for template
+		// This is a bit of a hack since scaffolding.Generate expects TemplateData
+		// But I'll just use a temporary template rewrite or just keep it simple.
+		// Actually, let's just use TemplateData and handle EventName manually if possible.
+		if err := scaffolding.Generate("listener.tmpl", dest, data); err != nil {
+			color.Red("Error: %v", err)
+			return
+		}
+		
+		// Update template manually for EventName for now
+		content, _ := os.ReadFile(dest)
+		newContent := strings.ReplaceAll(string(content), "{{.EventName}}", eventName)
+		os.WriteFile(dest, []byte(newContent), 0644)
+
+		// 2. Auto-register in registry.go
+		registryPath := filepath.Join("backend", "internal", "core", "events", "registry.go")
+		color.Cyan("Auto-registering listener in %s...", registryPath)
+		if err := astutil.InjectListenerRegistration(registryPath, eventName, data.Name); err != nil {
+			color.Yellow("⚠️  Warning: Could not auto-register listener: %v", err)
+			color.Yellow("Please register manually in internal/core/events/registry.go")
+		}
+
+		color.Green("✨ Listener %s created successfully! 👂", data.Name)
+	},
+}
+
+var makeSeederCmd = &cobra.Command{
+	Use:   "make:seeder [Name]",
+	Short: "Create a new Database Seeder",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		data := scaffolding.BuildData(name)
+
+		// 1. Generate Seeder Logic
+		dest := filepath.Join("backend", "internal", "infrastructure", "database", "seeders", data.LowerName+"_seeder.go")
+		color.Cyan("Generating Seeder %s...", data.Name)
+		if err := scaffolding.Generate("seeder.tmpl", dest, data); err != nil {
+			color.Red("Error: %v", err)
+			return
+		}
+
+		// 2. Auto-register in registry.go
+		registryPath := filepath.Join("backend", "internal", "infrastructure", "database", "seeders", "registry.go")
+		color.Cyan("Auto-registering seeder in %s...", registryPath)
+		if err := astutil.InjectSeederRegistration(registryPath, data.Name); err != nil {
+			color.Yellow("⚠️  Warning: Could not auto-register seeder: %v", err)
+			color.Yellow("Please register manually in internal/infrastructure/database/seeders/registry.go")
+		}
+
+		color.Green("✨ Seeder %s created successfully! 🌱", data.Name)
+	},
+}
+
+func init() {
+	makeListenerCmd.Flags().StringP("event", "e", "", "The event to listen for (required)")
 }

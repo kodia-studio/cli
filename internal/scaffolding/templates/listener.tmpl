@@ -1,0 +1,36 @@
+package listeners
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/kodia-studio/kodia/internal/core/ports"
+	"go.uber.org/zap"
+)
+
+// {{.Name}}Listener handles the {{.EventName}} event.
+type {{.Name}}Listener struct {
+	log *zap.Logger
+}
+
+func New{{.Name}}Listener(log *zap.Logger) *{{.Name}}Listener {
+	return &{{.Name}}Listener{
+		log: log,
+	}
+}
+
+func (l *{{.Name}}Listener) Handle(ctx context.Context, event ports.Event) error {
+	l.log.Info("Handling event in {{.Name}}Listener", 
+		zap.String("event", event.Name()),
+	)
+	
+	// Business logic here
+	fmt.Printf("Logic for {{.Name}} executed\n")
+
+	return nil
+}
+
+// ShouldQueue returns true if this listener should be executed in the background.
+func (l *{{.Name}}Listener) ShouldQueue() bool {
+	return false // Set to true to run via Background Worker
+}

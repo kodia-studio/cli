@@ -1,0 +1,28 @@
+package mail
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/kodia-studio/kodia/internal/core/ports"
+)
+
+type {{.Name}}Mail struct {
+	mailer ports.Mailer
+}
+
+func New{{.Name}}Mail(mailer ports.Mailer) *{{.Name}}Mail {
+	return &{{.Name}}Mail{
+		mailer: mailer,
+	}
+}
+
+func (m *{{.Name}}Mail) Send(ctx context.Context, to string, data interface{}) error {
+	subject := "{{.Name}} Notification"
+	template := "{{.LowerName}}.html"
+	
+	msg := fmt.Sprintf("Sending {{.Name}} mail to %s", to)
+	fmt.Println(msg)
+
+	return m.mailer.SendWithTemplate(ctx, []string{to}, subject, template, data)
+}

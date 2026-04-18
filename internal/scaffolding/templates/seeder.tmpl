@@ -1,0 +1,23 @@
+package seeders
+
+import (
+	"github.com/brianvoe/gofakeit/v7"
+	"gorm.io/gorm"
+)
+
+type {{.Name}}Seeder struct{}
+
+func (s *{{.Name}}Seeder) Run(db *gorm.DB) error {
+	// Example: Create 10 dummy records
+	for i := 0; i < 10; i++ {
+		// Use gofakeit to generate realistic data
+		// record := models.{{.Name}}{
+		// 	Name: gofakeit.Name(),
+		// 	Email: gofakeit.Email(),
+		// }
+		// if err := db.Create(&record).Error; err != nil {
+		// 	return err
+		// }
+	}
+	return nil
+}

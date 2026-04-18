@@ -485,6 +485,152 @@ func addRouteGroup(file *ast.File, data scaffolding.TemplateData) {
 	}
 }
 
+// InjectListenerRegistration registers a listener for an event in registry.go
+func InjectListenerRegistration(registryPath string, eventName string, listenerName string) error {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, registryPath, nil, parser.ParseComments)
+	if err != nil {
+		return fmt.Errorf("failed to parse registry.go: %w", err)
+	}
+
+	// 1. Add imports
+	addImport(node, "github.com/kodia-studio/kodia/internal/core/listeners")
+
+	// 2. Find Registry variable
+	var registryExpr *ast.CompositeLit
+	for _, decl := range node.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok || gd.Tok != token.VAR {
+			continue
+		}
+		for _, spec := range gd.Specs {
+			vs, ok := spec.(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+			for i, name := range vs.Names {
+				if name.Name == "Registry" && i < len(vs.Values) {
+					if cl, ok := vs.Values[i].(*ast.CompositeLit); ok {
+						registryExpr = cl
+						break
+					}
+				}
+			}
+		}
+	}
+
+	if registryExpr == nil {
+		return fmt.Errorf("could not find Registry variable in %s", registryPath)
+	}
+
+	// 3. Find or create the event entry
+	newListenerExpr, _ := parser.ParseExpr(fmt.Sprintf("&listeners.%sListener{}", listenerName))
+	
+	found := false
+	for _, elt := range registryExpr.Elts {
+		kv, ok := elt.(*ast.KeyValueExpr)
+		if !ok {
+			continue
+		}
+		
+		keyLit, ok := kv.Key.(*ast.BasicLit)
+		if !ok || keyLit.Value != fmt.Sprintf("\"%s\"", eventName) {
+			continue
+		}
+		
+		// Found the event, add listener to slice
+		valCl, ok := kv.Value.(*ast.CompositeLit)
+		if !ok {
+			continue
+		}
+		
+		// Check for duplicate
+		isDuplicate := false
+		for _, v := range valCl.Elts {
+			if fmt.Sprintf("%v", v) == fmt.Sprintf("%v", newListenerExpr) {
+				isDuplicate = true
+				break
+			}
+		}
+		
+		if !isDuplicate {
+			valCl.Elts = append(valCl.Elts, newListenerExpr)
+		}
+		found = true
+		break
+	}
+
+	if !found {
+		// Create new entry
+		registryExpr.Elts = append(registryExpr.Elts, &ast.KeyValueExpr{
+			Key: &ast.BasicLit{Kind: token.STRING, Value: fmt.Sprintf("\"%s\"", eventName)},
+			Value: &ast.CompositeLit{
+				Type: &ast.ArrayType{Elt: &ast.SelectorExpr{
+					X:   ast.NewIdent("ports"),
+					Sel: ast.NewIdent("Listener"),
+				}},
+				Elts: []ast.Expr{newListenerExpr},
+			},
+		})
+	}
+
+	return saveFile(registryPath, fset, node)
+}
+
+// InjectSeederRegistration registers a new seeder in registry.go
+func InjectSeederRegistration(registryPath string, name string) error {
+	fset := token.NewFileSet()
+	node, err := parser.ParseFile(fset, registryPath, nil, parser.ParseComments)
+	if err != nil {
+		return fmt.Errorf("failed to parse registry.go: %w", err)
+	}
+
+	// 1. Find Registry variable (which is a slice in this case)
+	var registryExpr *ast.CompositeLit
+	for _, decl := range node.Decls {
+		gd, ok := decl.(*ast.GenDecl)
+		if !ok || gd.Tok != token.VAR {
+			continue
+		}
+		for _, spec := range gd.Specs {
+			vs, ok := spec.(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+			for i, varName := range vs.Names {
+				if varName.Name == "Registry" && i < len(vs.Values) {
+					if cl, ok := vs.Values[i].(*ast.CompositeLit); ok {
+						registryExpr = cl
+						break
+					}
+				}
+			}
+		}
+	}
+
+	if registryExpr == nil {
+		return fmt.Errorf("could not find Registry variable in %s", registryPath)
+	}
+
+	// 2. Add seeder instance to the slice
+	newSeederExpr, _ := parser.ParseExpr(fmt.Sprintf("&%sSeeder{}", name))
+
+	// Duplicate check
+	found := false
+	for _, elt := range registryExpr.Elts {
+		if fmt.Sprintf("%v", elt) == fmt.Sprintf("%v", newSeederExpr) {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		registryExpr.Elts = append(registryExpr.Elts, newSeederExpr)
+	}
+
+	return saveFile(registryPath, fset, node)
+}
+
 
 func saveFile(path string, fset *token.FileSet, node *ast.File) error {
 	f, err := os.Create(path)

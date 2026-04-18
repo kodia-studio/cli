@@ -19,6 +19,7 @@ type TemplateData struct {
 	Plural      string // e.g., "Products"
 	LowerPlural string // e.g., "products"
 	Timestamp   string // e.g., "20231024150405"
+	ProjectName string // e.g., "kodia-framework"
 }
 
 // Generate processes a template file and writes it to the destination

@@ -1,0 +1,14 @@
+package events
+
+// {{.Name}}Event represents the {{.Name}} event.
+type {{.Name}}Event struct {
+	Data interface{}
+}
+
+func (e *{{.Name}}Event) Name() string {
+	return "{{.Name}}Event"
+}
+
+func (e *{{.Name}}Event) Payload() interface{} {
+	return e.Data
+}

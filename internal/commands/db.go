@@ -27,6 +27,15 @@ var dbRollbackCmd = &cobra.Command{
 	},
 }
 
+var dbSeedCmd = &cobra.Command{
+	Use:   "db:seed",
+	Short: "Seed the database with dummy data",
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Cyan("Seeding database with realistic dummy data... 🌱")
+		runDbCommand("go", "run", "cmd/seeder/main.go")
+	},
+}
+
 var devCmd = &cobra.Command{
 	Use:   "dev",
 	Short: "Start both backend and frontend development servers",
@@ -72,5 +81,6 @@ func runDbCommand(command string, args ...string) {
 func init() {
 	rootCmd.AddCommand(dbMigrateCmd)
 	rootCmd.AddCommand(dbRollbackCmd)
+	rootCmd.AddCommand(dbSeedCmd)
 	rootCmd.AddCommand(devCmd)
 }
