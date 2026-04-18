@@ -1,0 +1,40 @@
+package jobs
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+
+	"github.com/hibiken/asynq"
+)
+
+// {{.Name}}Payload defines the data needed for the {{.Name}} job.
+type {{.Name}}Payload struct {
+	// Add your fields here
+	// Example: Email string `json:"email"`
+}
+
+// {{.Name}}Task type constant.
+const Type{{.Name}} = "job:{{.LowerName}}"
+
+// New{{.Name}}Task creates a new asynq task for {{.LowerName}}.
+func New{{.Name}}Task(payload {{.Name}}Payload) (*asynq.Task, error) {
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+	return asynq.NewTask(Type{{.Name}}, b), nil
+}
+
+// Handle{{.Name}}Task handles the {{.Name}} job logic.
+func Handle{{.Name}}Task(ctx context.Context, t *asynq.Task) error {
+	var p {{.Name}}Payload
+	if err := json.Unmarshal(t.Payload(), &p); err != nil {
+		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
+	}
+
+	// TODO: Implement your job logic here
+	// fmt.Printf("Executing {{.Name}} Job for: %v\n", p)
+
+	return nil
+}

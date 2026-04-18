@@ -1,0 +1,24 @@
+package jobs
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hibiken/asynq"
+)
+
+// {{.Name}}Task type constant for cron.
+const Type{{.Name}}Cron = "cron:{{.LowerName}}"
+
+// New{{.Name}}CronTask creates a new asynq task for the {{.Name}} scheduled job.
+func New{{.Name}}CronTask() *asynq.Task {
+	return asynq.NewTask(Type{{.Name}}Cron, nil)
+}
+
+// Handle{{.Name}}CronTask handles the scheduled {{.Name}} job logic.
+func Handle{{.Name}}CronTask(ctx context.Context, t *asynq.Task) error {
+	// TODO: Implement your scheduled job logic here
+	// fmt.Println("Executing Scheduled {{.Name}} Cron Job")
+
+	return nil
+}

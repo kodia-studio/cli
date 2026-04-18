@@ -1,0 +1,12 @@
+<script lang="ts">
+	let { children, class: className = '', ...props } = $props();
+</script>
+
+<div class="relative group {className}" {...props}>
+	<!-- Premium background effect -->
+	<div class="absolute -inset-0.5 bg-gradient-to-r from-primary-600 to-accent-600 rounded-xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+	
+	<div class="relative px-7 py-4 bg-white dark:bg-slate-900 ring-1 ring-slate-200 dark:ring-slate-800 rounded-xl leading-none flex items-center divide-x divide-slate-200 dark:divide-slate-700">
+		{@render children?.()}
+	</div>
+</div>

@@ -1,0 +1,18 @@
+package middleware
+
+import (
+	"github.com/gin-gonic/gin"
+)
+
+// {{.Name}} returns a new Gin middleware for {{.LowerName}} logic.
+// This structure allows for dependency injection if needed.
+func {{.Name}}() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Logic BEFORE request
+		// e.g., check header, validate role, rate limit
+		
+		c.Next()
+		
+		// Logic AFTER request (optional)
+	}
+}

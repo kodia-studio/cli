@@ -1,0 +1,47 @@
+package services
+
+import (
+	"context"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
+)
+
+// Mock{{.Name}}Repository is a mock of ports.{{.Name}}Repository
+type Mock{{.Name}}Repository struct {
+	mock.Mock
+}
+
+// Add your repository mock methods here
+// Example:
+// func (m *Mock{{.Name}}Repository) Create(ctx context.Context, item *entities.{{.Name}}) error {
+// 	args := m.Called(ctx, item)
+// 	return args.Error(0)
+// }
+
+func Test{{.Name}}Service(t *testing.T) {
+	log := zap.NewNop()
+	
+	t.Run("Initialize Service", func(t *testing.T) {
+		mockRepo := new(Mock{{.Name}}Repository)
+		service := New{{.Name}}Service(mockRepo, log)
+		
+		assert.NotNil(t, service)
+	})
+
+	// Add more test cases using table-driven tests
+	/*
+	t.Run("Create {{.Name}} Success", func(t *testing.T) {
+		mockRepo := new(Mock{{.Name}}Repository)
+		service := New{{.Name}}Service(mockRepo, log)
+
+		// mockRepo.On("Create", mock.Anything, mock.Anything).Return(nil)
+		
+		// err := service.DoSomething(...)
+		// assert.NoError(t, err)
+		// mockRepo.AssertExpectations(t)
+	})
+	*/
+}

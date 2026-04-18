@@ -1,0 +1,55 @@
+package handlers
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
+)
+
+// Mock{{.Name}}Service is a mock of ports.{{.Name}}Service
+type Mock{{.Name}}Service struct {
+	mock.Mock
+}
+
+// Add your service mock methods here
+// Example:
+// func (m *Mock{{.Name}}Service) FindByID(ctx context.Context, id uint) (*entities.{{.Name}}, error) {
+// 	args := m.Called(ctx, id)
+// 	return args.Get(0).(*entities.{{.Name}}), args.Error(1)
+// }
+
+func Test{{.Name}}Handler(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	log := zap.NewNop()
+	validate := validator.New()
+
+	t.Run("Create Handler", func(t *testing.T) {
+		mockService := new(Mock{{.Name}}Service)
+		handler := New{{.Name}}Handler(mockService, validate, log)
+		
+		assert.NotNil(t, handler)
+	})
+
+	/*
+	t.Run("Get {{.Name}} Success", func(t *testing.T) {
+		mockService := new(Mock{{.Name}}Service)
+		handler := New{{.Name}}Handler(mockService, validate, log)
+		
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		
+		// mockService.On("FindByID", mock.Anything, mock.Anything).Return(&entities.{{.Name}}{}, nil)
+		
+		// handler.Get(c)
+		
+		// assert.Equal(t, http.StatusOK, w.Code)
+		// mockService.AssertExpectations(t)
+	})
+	*/
+}

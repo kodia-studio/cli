@@ -1,0 +1,15 @@
+package validator
+
+import (
+	"github.com/go-playground/validator/v10"
+)
+
+// {{.Name}} implements a custom validation logic.
+// Usage: v.RegisterValidation("{{.LowerName}}", validator.{{.Name}})
+func {{.Name}}(fl validator.FieldLevel) bool {
+	// The field value to validate
+	// val := fl.Field().String()
+	
+	// Return true if valid, false otherwise
+	return true
+}

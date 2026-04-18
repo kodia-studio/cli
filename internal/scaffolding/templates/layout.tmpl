@@ -1,0 +1,15 @@
+<script lang="ts">
+	let { children } = $props();
+</script>
+
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-primary-500/30">
+	<!-- Decorative background elements -->
+	<div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+		<div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-primary-500/10 blur-[120px]"></div>
+		<div class="absolute top-[20%] -right-[5%] w-[30%] h-[30%] rounded-full bg-accent-500/10 blur-[100px]"></div>
+	</div>
+
+	<main class="relative">
+		{@render children()}
+	</main>
+</div>

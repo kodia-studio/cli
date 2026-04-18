@@ -1,0 +1,164 @@
+package services
+
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/kodia-studio/kodia/internal/core/domain"
+	"github.com/kodia-studio/kodia/internal/core/ports"
+	"github.com/kodia-studio/kodia/pkg/hash"
+	"github.com/kodia-studio/kodia/pkg/jwt"
+	"go.uber.org/zap"
+)
+
+// AuthService implements ports.AuthService.
+type AuthService struct {
+	userRepo         ports.UserRepository
+	refreshTokenRepo ports.RefreshTokenRepository
+	jwtManager       *jwt.Manager
+	log              *zap.Logger
+}
+
+// NewAuthService creates a new AuthService with its dependencies injected.
+func NewAuthService(
+	userRepo ports.UserRepository,
+	refreshTokenRepo ports.RefreshTokenRepository,
+	jwtManager *jwt.Manager,
+	log *zap.Logger,
+) *AuthService {
+	return &AuthService{
+		userRepo:         userRepo,
+		refreshTokenRepo: refreshTokenRepo,
+		jwtManager:       jwtManager,
+		log:              log,
+	}
+}
+
+// Register creates a new user account.
+func (s *AuthService) Register(ctx context.Context, input ports.RegisterInput) (*ports.AuthResponse, error) {
+	exists, err := s.userRepo.ExistsByEmail(ctx, input.Email)
+	if err != nil {
+		s.log.Error("Failed to check email existence", zap.Error(err))
+		return nil, fmt.Errorf("register: %w", err)
+	}
+	if exists {
+		return nil, domain.ErrAlreadyExists
+	}
+
+	hashedPassword, err := hash.Make(input.Password)
+	if err != nil {
+		return nil, fmt.Errorf("register: failed to hash password: %w", err)
+	}
+
+	user := &domain.User{
+		ID:        uuid.NewString(),
+		Name:      input.Name,
+		Email:     input.Email,
+		Password:  hashedPassword,
+		Role:      domain.RoleUser,
+		IsActive:  true,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if err := s.userRepo.Create(ctx, user); err != nil {
+		s.log.Error("Failed to create user", zap.Error(err))
+		return nil, fmt.Errorf("register: %w", err)
+	}
+
+	return s.generateTokenPair(ctx, user)
+}
+
+// Login authenticates a user and returns JWT tokens.
+func (s *AuthService) Login(ctx context.Context, input ports.LoginInput) (*ports.AuthResponse, error) {
+	user, err := s.userRepo.FindByEmail(ctx, input.Email)
+	if err != nil {
+		if err == domain.ErrNotFound {
+			return nil, domain.ErrInvalidCredentials
+		}
+		return nil, fmt.Errorf("login: %w", err)
+	}
+
+	if !user.IsActive {
+		return nil, domain.ErrInactiveAccount
+	}
+
+	if !hash.Check(input.Password, user.Password) {
+		return nil, domain.ErrInvalidCredentials
+	}
+
+	return s.generateTokenPair(ctx, user)
+}
+
+// RefreshToken validates a refresh token and issues a new access token.
+func (s *AuthService) RefreshToken(ctx context.Context, refreshTokenStr string) (*ports.AuthResponse, error) {
+	claims, err := s.jwtManager.ValidateRefreshToken(refreshTokenStr)
+	if err != nil {
+		return nil, domain.ErrTokenExpired
+	}
+
+	storedToken, err := s.refreshTokenRepo.FindByToken(ctx, refreshTokenStr)
+	if err != nil {
+		return nil, domain.ErrTokenExpired
+	}
+	if !storedToken.IsValid() {
+		return nil, domain.ErrTokenRevoked
+	}
+
+	user, err := s.userRepo.FindByID(ctx, claims.UserID)
+	if err != nil {
+		return nil, domain.ErrNotFound
+	}
+	if !user.IsActive {
+		return nil, domain.ErrInactiveAccount
+	}
+
+	if err := s.refreshTokenRepo.RevokeByToken(ctx, refreshTokenStr); err != nil {
+		s.log.Warn("Failed to revoke old refresh token", zap.Error(err))
+	}
+
+	return s.generateTokenPair(ctx, user)
+}
+
+// Logout revokes a specific refresh token.
+func (s *AuthService) Logout(ctx context.Context, refreshToken string) error {
+	return s.refreshTokenRepo.RevokeByToken(ctx, refreshToken)
+}
+
+// LogoutAll revokes all refresh tokens for a user.
+func (s *AuthService) LogoutAll(ctx context.Context, userID string) error {
+	return s.refreshTokenRepo.RevokeAllForUser(ctx, userID)
+}
+
+// generateTokenPair creates and stores an access + refresh token pair.
+func (s *AuthService) generateTokenPair(ctx context.Context, user *domain.User) (*ports.AuthResponse, error) {
+	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email, string(user.Role))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
+	}
+
+	refreshTokenStr, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email, string(user.Role))
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
+	}
+
+	refreshToken := &domain.RefreshToken{
+		ID:        uuid.NewString(),
+		UserID:    user.ID,
+		Token:     refreshTokenStr,
+		IsRevoked: false,
+		ExpiresAt: time.Now().Add(30 * 24 * time.Hour),
+		CreatedAt: time.Now(),
+	}
+	if err := s.refreshTokenRepo.Create(ctx, refreshToken); err != nil {
+		s.log.Error("Failed to persist refresh token", zap.Error(err))
+	}
+
+	return &ports.AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshTokenStr,
+		User:         user,
+	}, nil
+}

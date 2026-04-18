@@ -1,0 +1,78 @@
+package postgres
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/kodia-studio/kodia/internal/core/domain"
+	"gorm.io/gorm"
+)
+
+type gormRefreshToken struct {
+	ID        string    `gorm:"column:id;primaryKey"`
+	UserID    string    `gorm:"column:user_id;not null;index"`
+	Token     string    `gorm:"column:token;not null"`
+	IsRevoked bool      `gorm:"column:is_revoked;not null;default:false"`
+	ExpiresAt time.Time `gorm:"column:expires_at;not null"`
+	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
+}
+
+func (gormRefreshToken) TableName() string { return "refresh_tokens" }
+
+func (g *gormRefreshToken) toDomain() *domain.RefreshToken {
+	return &domain.RefreshToken{
+		ID:        g.ID,
+		UserID:    g.UserID,
+		Token:     g.Token,
+		IsRevoked: g.IsRevoked,
+		ExpiresAt: g.ExpiresAt,
+		CreatedAt: g.CreatedAt,
+	}
+}
+
+type RefreshTokenRepository struct {
+	db *gorm.DB
+}
+
+func NewRefreshTokenRepository(db *gorm.DB) *RefreshTokenRepository {
+	return &RefreshTokenRepository{db: db}
+}
+
+func (r *RefreshTokenRepository) Create(ctx context.Context, token *domain.RefreshToken) error {
+	m := &gormRefreshToken{
+		ID:        token.ID,
+		UserID:    token.UserID,
+		Token:     token.Token,
+		IsRevoked: token.IsRevoked,
+		ExpiresAt: token.ExpiresAt,
+		CreatedAt: token.CreatedAt,
+	}
+	return r.db.WithContext(ctx).Create(m).Error
+}
+
+func (r *RefreshTokenRepository) FindByToken(ctx context.Context, token string) (*domain.RefreshToken, error) {
+	var m gormRefreshToken
+	result := r.db.WithContext(ctx).Where("token = ?", token).First(&m)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return nil, domain.ErrNotFound
+		}
+		return nil, result.Error
+	}
+	return m.toDomain(), nil
+}
+
+func (r *RefreshTokenRepository) RevokeByToken(ctx context.Context, token string) error {
+	return r.db.WithContext(ctx).
+		Model(&gormRefreshToken{}).
+		Where("token = ?", token).
+		Update("is_revoked", true).Error
+}
+
+func (r *RefreshTokenRepository) RevokeAllForUser(ctx context.Context, userID string) error {
+	return r.db.WithContext(ctx).
+		Model(&gormRefreshToken{}).
+		Where("user_id = ? AND is_revoked = false", userID).
+		Update("is_revoked", true).Error
+}

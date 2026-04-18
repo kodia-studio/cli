@@ -41,11 +41,22 @@ func Generate(templatePath, destPath string, data TemplateData) error {
 	
 	// Ensure we read from the current CLI root
 	pwd, _ := os.Getwd()
-	// Detect if we are in the 'kodia-cli' folder or the root folder
-	tmplPath := filepath.Join("kodia-cli", "internal", "scaffolding", "templates", templatePath)
-	if _, err := os.Stat(tmplPath); os.IsNotExist(err) {
-		// Fallback to local
-		tmplPath = filepath.Join(pwd, "internal", "scaffolding", "templates", templatePath)
+	// Heuristic: check multiple common locations for templates
+	possiblePaths := []string{
+		filepath.Join(pwd, "internal", "scaffolding", "templates", templatePath),
+		"/Users/andiaryatno/Kodia/Framework/cli/internal/scaffolding/templates/" + templatePath, // Absolute fallback for dev
+	}
+
+	var tmplPath string
+	for _, p := range possiblePaths {
+		if _, err := os.Stat(p); err == nil {
+			tmplPath = p
+			break
+		}
+	}
+
+	if tmplPath == "" {
+		return fmt.Errorf("could not find template: %s", templatePath)
 	}
 
 	tmplContent, err := os.ReadFile(tmplPath)
