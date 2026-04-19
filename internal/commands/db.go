@@ -36,35 +36,74 @@ var dbSeedCmd = &cobra.Command{
 	},
 }
 
+var dbFreshCmd = &cobra.Command{
+	Use:   "db:fresh",
+	Short: "Drop all tables and re-run all migrations",
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Yellow("⚠️  This will drop all tables. Are you sure? (no confirmation, use with caution)")
+		runDbCommand("make", "db-fresh")
+	},
+}
+
+var dbStatusCmd = &cobra.Command{
+	Use:   "db:status",
+	Short: "Show pending and applied migrations",
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Cyan("Checking migration status...")
+		color.Yellow("Tip: Run 'kodia db:migrate' to apply pending migrations")
+		runDbCommand("make", "db-status")
+	},
+}
+
+var dbResetCmd = &cobra.Command{
+	Use:   "db:reset",
+	Short: "Rollback all, re-run migrations, and seed the database",
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Yellow("⚠️  Resetting database: rollback → migrate → seed")
+		runDbCommand("make", "db-reset")
+	},
+}
+
 var devCmd = &cobra.Command{
 	Use:   "dev",
 	Short: "Start both backend and frontend development servers",
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Magenta("Starting Kodia Framework Development Mode 🚀")
 		color.Yellow("Note: You must have 'make' and 'docker' installed.")
-		
-		// Typically, this might run the root 'make dev'
+
 		execCmd := exec.Command("make", "dev")
 		execCmd.Stdout = os.Stdout
 		execCmd.Stderr = os.Stderr
-		
+
 		if err := execCmd.Run(); err != nil {
 			color.Red("Failed to start dev servers: %v", err)
 		}
 	},
 }
 
-func runDbCommand(command string, args ...string) {
-	// Let's assume we are in the root directory and 'backend' is a subfolder
-	backendDir := "backend"
-	if _, err := os.Stat(backendDir); os.IsNotExist(err) {
-		// Possibly we are inside 'kodia-cli' developing the tool? 
-		// If so, path should be '../backend'
-		pwd, _ := os.Getwd()
-		if filepath.Base(pwd) == "kodia-cli" {
-			backendDir = "../backend"
+func findBackendDir() string {
+	// Try multiple locations for the backend directory
+	possiblePaths := []string{
+		"backend",
+		"./backend",
+		"../backend",
+		"../../backend",
+	}
+
+	for _, path := range possiblePaths {
+		if _, err := os.Stat(path); err == nil {
+			if _, err := os.Stat(filepath.Join(path, "Makefile")); err == nil {
+				return path
+			}
 		}
 	}
+
+	// Fallback to "backend" if nothing found
+	return "backend"
+}
+
+func runDbCommand(command string, args ...string) {
+	backendDir := findBackendDir()
 
 	execCmd := exec.Command(command, args...)
 	execCmd.Dir = backendDir
@@ -82,5 +121,8 @@ func init() {
 	rootCmd.AddCommand(dbMigrateCmd)
 	rootCmd.AddCommand(dbRollbackCmd)
 	rootCmd.AddCommand(dbSeedCmd)
+	rootCmd.AddCommand(dbFreshCmd)
+	rootCmd.AddCommand(dbStatusCmd)
+	rootCmd.AddCommand(dbResetCmd)
 	rootCmd.AddCommand(devCmd)
 }

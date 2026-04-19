@@ -83,6 +83,33 @@ var makeRepositoryCmd = &cobra.Command{
 	},
 }
 
+var makeModelCmd = &cobra.Command{
+	Use:   "make:model [Name]",
+	Short: "Create a new domain model entity",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
+		data := scaffolding.BuildData(name)
+		dest := filepath.Join("backend", "internal", "core", "domain", data.LowerName+".go")
+
+		color.Cyan("Generating domain model for %s...", data.Name)
+		if err := scaffolding.Generate("model.tmpl", dest, data); err != nil {
+			color.Red("Error: %v", err)
+			return
+		}
+
+		color.Green("✨ Domain model %s created! 📦", data.Name)
+		color.Yellow("Next step: Add fields to %s/internal/core/domain/%s.go", "backend", data.LowerName+".go")
+	},
+}
+
 var makePageCmd = &cobra.Command{
 	Use:   "make:page [route]",
 	Short: "Create a new SvelteKit page",
@@ -461,6 +488,7 @@ func init() {
 	rootCmd.AddCommand(makeHandlerCmd)
 	rootCmd.AddCommand(makeServiceCmd)
 	rootCmd.AddCommand(makeRepositoryCmd)
+	rootCmd.AddCommand(makeModelCmd)
 	rootCmd.AddCommand(makeMigrationCmd)
 	rootCmd.AddCommand(makePageCmd)
 	rootCmd.AddCommand(makeFeatureCmd)

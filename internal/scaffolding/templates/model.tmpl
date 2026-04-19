@@ -1,0 +1,17 @@
+// Package domain contains the core entities and value objects of Kodia Framework.
+// This is a domain entity with no external dependencies — only pure Go stdlib.
+package domain
+
+import (
+	"time"
+)
+
+// {{.Name}} is a domain entity representing a {{.LowerName}}.
+// Add domain-specific fields and methods here (no GORM tags).
+type {{.Name}} struct {
+	ID        string
+	// TODO: Add your fields here
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time
+}
