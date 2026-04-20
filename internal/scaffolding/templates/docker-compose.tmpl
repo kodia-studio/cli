@@ -1,76 +1,79 @@
-name: {{.ProjectName}}
+version: '3.8'
 
 services:
-  # Main Database
+  # Primary Database
   postgres:
-    image: postgres:16-alpine
-    container_name: {{.ProjectName}}_postgres
-    restart: always
-    environment:
-      POSTGRES_DB: ${DB_NAME:-kodia_db}
-      POSTGRES_USER: ${DB_USER:-kodia}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+    image: 'postgres:16-alpine'
+    container_name: '${COMPOSE_PROJECT_NAME:-kodia}-postgres'
     ports:
-      - "${DB_PORT:-5432}:5432"
+      - '${FORWARD_DB_PORT:-5432}:5432'
+    environment:
+      POSTGRES_DB: '${DB_DATABASE:-kodia}'
+      POSTGRES_USER: '${DB_USERNAME:-kodia}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - 'kodia-postgres:/var/lib/postgresql/data'
+    networks:
+      - kodia
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-kodia} -d ${DB_NAME:-kodia_db}"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-kodia} -d ${DB_DATABASE:-kodia}"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  # Redis for Caching & Workers
+  # Key-Value Store & Queue
   redis:
-    image: redis:7-alpine
-    container_name: {{.ProjectName}}_redis
-    restart: always
+    image: 'redis:7-alpine'
+    container_name: '${COMPOSE_PROJECT_NAME:-kodia}-redis'
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    volumes:
+      - 'kodia-redis:/data'
+    networks:
+      - kodia
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  # MinIO (S3 Simulation)
-  minio:
-    image: minio/minio
-    container_name: {{.ProjectName}}_minio
-    restart: always
+  # Full-Text Search Engine
+  meilisearch:
+    image: 'getmeili/meilisearch:latest'
+    container_name: '${COMPOSE_PROJECT_NAME:-kodia}-meilisearch'
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - '${FORWARD_MEILISEARCH_PORT:-7700}:7700'
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
+      MEILI_MASTER_KEY: '${MEILISEARCH_KEY:-masterKey}'
+      MEILI_NO_ANALYTICS: 'true'
     volumes:
-      - minio_data:/data
+      - 'kodia-meilisearch:/meili_data'
+    networks:
+      - kodia
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 5s
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7700/health"]
+      interval: 10s
       timeout: 5s
       retries: 5
 
-  # Backend App
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: {{.ProjectName}}_backend
+  # Local SMTP & Email Inspector
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    container_name: '${COMPOSE_PROJECT_NAME:-kodia}-mailpit'
     ports:
-      - "8080:8080"
-    environment:
-      - DB_HOST=postgres
-      - REDIS_HOST=redis
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    env_file: ./backend/.env
+      - '${FORWARD_MAILPIT_PORT:-1025}:1025'
+      - '${FORWARD_MAILPIT_DASHBOARD_PORT:-8025}:8025'
+    networks:
+      - kodia
+
+networks:
+  kodia:
+    driver: bridge
 
 volumes:
-  postgres_data:
-  minio_data:
+  kodia-postgres:
+    driver: local
+  kodia-redis:
+    driver: local
+  kodia-meilisearch:
+    driver: local

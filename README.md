@@ -34,6 +34,8 @@ mv kodia /usr/local/bin/ # Or add to your PATH
 
 ### 1. Project Management
 - `kodia new <project-name>`: Scaffolds a new professional fullstack application (Go + SvelteKit).
+- `kodia sail up`: Launches your development infrastructure (Postgres, Redis, Meilisearch, Mailpit) using Docker.
+- `kodia sail down`: Stops and removes the development infrastructure containers.
 - `kodia serve [--watch]`: Starts the developmental server with automatic hot-reload for the backend.
 - `kodia tinker`: Opens an interactive REPL shell to test your business logic and database queries in real-time.
 
