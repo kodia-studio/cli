@@ -8,13 +8,23 @@ Kodia CLI is designed to eliminate boilerplate and accelerate your fullstack dev
 
 ## 🛠️ Installation
 
+The easiest way to install the Kodia CLI is via `go install`:
+
 ```bash
-# Clone the framework
+go install github.com/kodia-studio/cli/kodia@latest
+```
+
+Ensuring your `$GOPATH/bin` is in your system's `PATH`.
+
+Alternatively, you can build from source:
+
+```bash
+# Clone the repository
 git clone https://github.com/kodia-studio/kodia.git
 
-# Build and install the CLI
+# Build and install locally
 cd cli
-go build -o kodia
+go build -o kodia ./kodia/main.go
 mv kodia /usr/local/bin/ # Or add to your PATH
 ```
 
