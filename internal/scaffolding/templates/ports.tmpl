@@ -1,0 +1,24 @@
+package ports
+
+import (
+	"context"
+	"github.com/kodia-studio/kodia/internal/core/domain"
+)
+
+// {{.Name}}Service defines the business logic for {{.Name}}.
+type {{.Name}}Service interface {
+	GetAll(ctx context.Context, params PaginationParams) ([]*domain.{{.Name}}, int, error)
+	GetByID(ctx context.Context, id uint64) (*domain.{{.Name}}, error)
+	Create(ctx context.Context, item *domain.{{.Name}}) error
+	Update(ctx context.Context, item *domain.{{.Name}}) error
+	Delete(ctx context.Context, id uint64) error
+}
+
+// {{.Name}}Repository defines the database operations for {{.Name}}.
+type {{.Name}}Repository interface {
+	GetAll(ctx context.Context, params PaginationParams) ([]*domain.{{.Name}}, int, error)
+	GetByID(ctx context.Context, id uint64) (*domain.{{.Name}}, error)
+	Create(ctx context.Context, item *domain.{{.Name}}) error
+	Update(ctx context.Context, item *domain.{{.Name}}) error
+	Delete(ctx context.Context, id uint64) error
+}

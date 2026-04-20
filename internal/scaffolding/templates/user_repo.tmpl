@@ -11,16 +11,19 @@ import (
 )
 
 type gormUser struct {
-	ID        string     `gorm:"column:id;primaryKey"`
-	Name      string     `gorm:"column:name;not null"`
-	Email     string     `gorm:"column:email;uniqueIndex;not null"`
-	Password  string     `gorm:"column:password;not null"`
-	Role      string     `gorm:"column:role;not null;default:'user'"`
-	IsActive  bool       `gorm:"column:is_active;not null;default:true"`
-	AvatarURL *string    `gorm:"column:avatar_url"`
-	CreatedAt time.Time  `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt time.Time  `gorm:"column:updated_at;autoUpdateTime"`
-	DeletedAt *time.Time `gorm:"column:deleted_at;index"`
+	ID               string     `gorm:"column:id;primaryKey"`
+	Name             string     `gorm:"column:name;not null"`
+	Email            string     `gorm:"column:email;uniqueIndex;not null"`
+	Password         string     `gorm:"column:password;not null"`
+	Role             string     `gorm:"column:role;not null;default:'user'"`
+	Permissions      string     `gorm:"column:permissions"` // Store as comma-separated or JSON
+	TwoFactorSecret  string     `gorm:"column:two_factor_secret"`
+	TwoFactorEnabled bool       `gorm:"column:two_factor_enabled;default:false"`
+	IsActive         bool       `gorm:"column:is_active;not null;default:true"`
+	AvatarURL        *string    `gorm:"column:avatar_url"`
+	CreatedAt        time.Time  `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt        time.Time  `gorm:"column:updated_at;autoUpdateTime"`
+	DeletedAt        *time.Time `gorm:"column:deleted_at;index"`
 }
 
 func (gormUser) TableName() string { return "users" }

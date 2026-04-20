@@ -134,12 +134,15 @@ func (s *AuthService) LogoutAll(ctx context.Context, userID string) error {
 
 // generateTokenPair creates and stores an access + refresh token pair.
 func (s *AuthService) generateTokenPair(ctx context.Context, user *domain.User) (*ports.AuthResponse, error) {
-	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email, string(user.Role))
+	// Extract permissions from user domain model
+	permissions := user.GetPermissions()
+
+	accessToken, err := s.jwtManager.GenerateAccessToken(user.ID, user.Email, string(user.Role), permissions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	refreshTokenStr, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email, string(user.Role))
+	refreshTokenStr, err := s.jwtManager.GenerateRefreshToken(user.ID, user.Email, string(user.Role), permissions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
@@ -161,4 +164,49 @@ func (s *AuthService) generateTokenPair(ctx context.Context, user *domain.User) 
 		RefreshToken: refreshTokenStr,
 		User:         user,
 	}, nil
+}
+
+// Setup2FA initializes 2FA for a user.
+func (s *AuthService) Setup2FA(ctx context.Context, userID string) (*ports.TwoFactorSetupResponse, error) {
+	user, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	secret, url, err := auth2fa.GenerateSecret(user.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	qrCode, err := auth2fa.GenerateQRCodeBase64(url)
+	if err != nil {
+		return nil, err
+	}
+
+	// Store secret in temporary user state or directly in DB as pending
+	user.TwoFactorSecret = secret
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return &ports.TwoFactorSetupResponse{
+		Secret:    secret,
+		QRCode:    qrCode,
+		Recovery:  []string{"REC-1", "REC-2", "REC-3"}, // Example recovery codes
+	}, nil
+}
+
+// VerifyAndEnable2FA verifies the 2FA code and enables 2FA for the account.
+func (s *AuthService) VerifyAndEnable2FA(ctx context.Context, userID, code string) error {
+	user, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if !auth2fa.ValidateToken(code, user.TwoFactorSecret) {
+		return errors.New("invalid 2fa code")
+	}
+
+	user.TwoFactorEnabled = true
+	return s.userRepo.Update(ctx, user)
 }

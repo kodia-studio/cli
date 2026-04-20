@@ -1,0 +1,36 @@
+package {{.LowerName}}
+
+import (
+	"context"
+
+	"github.com/kodia-studio/kodia/internal/adapters/websocket"
+	"go.uber.org/zap"
+)
+
+// {{.Name}}Broadcaster handles real-time WebSocket notifications for {{.LowerName}} events.
+// Inject this into your services to send real-time updates to connected clients.
+type {{.Name}}Broadcaster struct {
+	broadcaster *websocket.Broadcaster
+	log         *zap.Logger
+}
+
+// New{{.Name}}Broadcaster creates a new broadcaster instance.
+func New{{.Name}}Broadcaster(broadcaster *websocket.Broadcaster, log *zap.Logger) *{{.Name}}Broadcaster {
+	return &{{.Name}}Broadcaster{
+		broadcaster: broadcaster,
+		log:         log,
+	}
+}
+
+// TODO: Add methods to notify users of {{.Name}} events.
+// Example:
+
+// Notify{{.Name}}Created sends a notification when a new {{.LowerName}} is created.
+// func (b *{{.Name}}Broadcaster) Notify{{.Name}}Created(ctx context.Context, userID string, {{.LowerName}} interface{}) error {
+//     return b.broadcaster.NotifyUser(userID, "{{.LowerName}}_created", {{.LowerName}})
+// }
+
+// Broadcast{{.Name}}Update sends an update to all users in a specific room.
+// func (b *{{.Name}}Broadcaster) Broadcast{{.Name}}Update(ctx context.Context, roomID string, {{.LowerName}} interface{}) error {
+//     return b.broadcaster.BroadcastToRoom(roomID, "{{.LowerName}}_updated", {{.LowerName}})
+// }

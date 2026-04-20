@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -56,15 +57,60 @@ var newCmd = &cobra.Command{
 		s.Stop()
 		color.Green("✅ Fresh Git repository initialized!")
 
+		// 4. Update module name and imports automatically
+		newModuleName := "github.com/kodia-studio/" + projectName
+		s.Suffix = "  Updating module name and imports..."
+		s.Restart()
+		
+		if err := updateModuleInProject(projectPath, newModuleName); err != nil {
+			s.Stop()
+			color.Red("Failed to update module name: %v", err)
+			return
+		}
+		
+		// Run go mod tidy
+		exec.Command("go", "-C", filepath.Join(projectPath, "backend"), "mod", "tidy").Run()
+		
+		s.Stop()
+		color.Green("✅ Project refactored successfully!")
+
 		fmt.Println()
 		color.Yellow("Next steps:")
 		fmt.Printf("  1. cd %s\n", projectName)
-		fmt.Printf("  2. Update module name in backend/go.mod with your project name\n")
+		fmt.Printf("  2. Configure your .env file in backend/\n")
 		fmt.Printf("  3. cd frontend && npm install && cd ..\n")
 		fmt.Printf("  4. kodia dev\n")
 		fmt.Println()
 		color.Cyan("Happy coding with Kodia! 🐨")
 	},
+}
+
+func updateModuleInProject(projectPath, newModuleName string) error {
+	oldModule := "github.com/kodia-studio/kodia"
+	backendPath := filepath.Join(projectPath, "backend")
+
+	return filepath.Walk(backendPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Only process .go files and go.mod
+		if info.IsDir() || (!strings.HasSuffix(path, ".go") && filepath.Base(path) != "go.mod") {
+			return nil
+		}
+
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+
+		newContent := strings.ReplaceAll(string(content), oldModule, newModuleName)
+		if newContent != string(content) {
+			return os.WriteFile(path, []byte(newContent), info.Mode())
+		}
+
+		return nil
+	})
 }
 
 func init() {

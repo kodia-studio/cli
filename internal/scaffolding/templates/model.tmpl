@@ -7,11 +7,12 @@ import (
 )
 
 // {{.Name}} is a domain entity representing a {{.LowerName}}.
-// Add domain-specific fields and methods here (no GORM tags).
 type {{.Name}} struct {
-	ID        string
-	// TODO: Add your fields here
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt *time.Time
+	ID        uint64    `json:"id"`
+	{{- range .Fields}}
+	{{.Name}} {{.GoType}} `json:"{{.LowerName}}"`
+	{{- end}}
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }

@@ -77,6 +77,23 @@ func ValidateName(name string) error {
 	return nil
 }
 
+// ValidateRoute checks if the given string is a valid SvelteKit route name.
+// Routes can be lowercase and follow kebab-case or underscore patterns.
+func ValidateRoute(route string) error {
+	if route == "" {
+		return fmt.Errorf("route cannot be empty")
+	}
+
+	// Basic validation for route characters
+	for i, r := range route {
+		if !unicode.IsLetter(r) && !unicode.IsDigit(r) && r != '_' && r != '-' && r != '(' && r != ')' {
+			return fmt.Errorf("route contains invalid character '%c' at position %d", r, i)
+		}
+	}
+
+	return nil
+}
+
 // SanitizeIdentifier removes invalid characters from an identifier and returns a valid one.
 // If the result would be invalid, returns an error.
 func SanitizeIdentifier(input string) (string, error) {

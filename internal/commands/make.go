@@ -27,7 +27,7 @@ var makeHandlerCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		dest := filepath.Join("backend", "internal", "adapters", "http", "handlers", data.LowerName+"_handler.go")
 		
 		color.Cyan("Generating handler for %s...", data.Name)
@@ -50,7 +50,7 @@ var makeServiceCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		dest := filepath.Join("backend", "internal", "core", "services", data.LowerName+"_service.go")
 		
 		color.Cyan("Generating service for %s...", data.Name)
@@ -73,7 +73,7 @@ var makeRepositoryCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		dest := filepath.Join("backend", "internal", "adapters", "repository", "postgres", data.LowerName+"_repository.go")
 		
 		color.Cyan("Generating repository for %s...", data.Name)
@@ -96,7 +96,7 @@ var makeModelCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		dest := filepath.Join("backend", "internal", "core", "domain", data.LowerName+".go")
 
 		color.Cyan("Generating domain model for %s...", data.Name)
@@ -118,13 +118,13 @@ var makePageCmd = &cobra.Command{
 		route := args[0]
 
 		// Validate route name to prevent code injection
-		if err := validation.ValidateName(route); err != nil {
+		if err := validation.ValidateRoute(route); err != nil {
 			color.Red("Error: Invalid route name - %v", err)
 			return
 		}
 
 		// For pages, the route is usually the lower name or plural name
-		data := scaffolding.BuildData(route)
+		data := scaffolding.BuildData(route, "")
 		dest := filepath.Join("frontend", "src", "routes", "(app)", route, "+page.svelte")
 		
 		color.Cyan("Generating Svelte page for %s...", route)
@@ -147,7 +147,7 @@ var makeMigrationCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		
 		baseDest := filepath.Join("backend", "internal", "infrastructure", "database", "migrations", "sql")
 		upDest := filepath.Join(baseDest, data.Timestamp+"_create_"+data.LowerPlural+"_table.up.sql")
@@ -181,7 +181,7 @@ var makeFeatureCmd = &cobra.Command{
 		makeMigrationCmd.Run(cmd, args)
 		
 		// Map the frontend route to the lower plural form typically
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		makePageCmd.Run(cmd, []string{data.LowerPlural})
 		
 		// Generate Tests
@@ -223,7 +223,7 @@ var makeAuthCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Magenta("🔐 Scaffolding complete Authentication Ecosystem...")
 
-		data := scaffolding.BuildData("Auth")
+		data := scaffolding.BuildData("Auth", "")
 
 		// 1. Backend: Handler, Service, Repository
 		scaffolding.Generate("auth_handler.tmpl", filepath.Join("backend", "internal", "adapters", "http", "handlers", "auth_handler.go"), data)
@@ -283,7 +283,7 @@ var makeMiddlewareCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		dest := filepath.Join("backend", "internal", "adapters", "http", "middleware", data.LowerName+".go")
 		
 		color.Cyan("Generating middleware %s...", data.Name)
@@ -308,7 +308,7 @@ var makeValidatorCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		dest := filepath.Join("backend", "pkg", "validator", data.LowerName+".go")
 		
 		color.Cyan("Generating validator %s...", data.Name)
@@ -333,7 +333,7 @@ var makeJobCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		dest := filepath.Join("backend", "internal", "core", "jobs", data.LowerName+"_job.go")
 		
 		color.Cyan("Generating background job %s...", data.Name)
@@ -366,7 +366,7 @@ var makeCronCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		dest := filepath.Join("backend", "internal", "core", "jobs", data.LowerName+"_cron.go")
 		
 		color.Cyan("Generating cron job %s...", data.Name)
@@ -400,7 +400,7 @@ var makeComponentCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(componentName)
+		data := scaffolding.BuildData(componentName, "")
 		
 		// Determine directory and filename
 		dir := filepath.Dir(pathName)
@@ -426,12 +426,12 @@ var makeLayoutCmd = &cobra.Command{
 		route := args[0]
 
 		// Validate route name to prevent code injection
-		if err := validation.ValidateName(route); err != nil {
+		if err := validation.ValidateRoute(route); err != nil {
 			color.Red("Error: Invalid route name - %v", err)
 			return
 		}
 
-		data := scaffolding.BuildData("Layout")
+		data := scaffolding.BuildData("Layout", "")
 		dest := filepath.Join("frontend", "src", "routes", route, "+layout.svelte")
 		
 		color.Cyan("Generating layout for route %s...", route)
@@ -462,7 +462,7 @@ var makeTestCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 
 		var dest string
 		var template string
@@ -503,6 +503,7 @@ func init() {
 	rootCmd.AddCommand(makeMailCmd)
 	rootCmd.AddCommand(makeEventCmd)
 	rootCmd.AddCommand(makeListenerCmd)
+	rootCmd.AddCommand(makeWSBroadcasterCmd)
 	rootCmd.AddCommand(makeSeederCmd)
 }
 
@@ -519,7 +520,7 @@ var makeMailCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 
 		// 1. Generate Go Mailer Logic
 		mailDest := filepath.Join("backend", "internal", "core", "services", "mail", data.LowerName+"_mail.go")
@@ -555,7 +556,7 @@ var makeEventCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 
 		dest := filepath.Join("backend", "internal", "core", "events", data.LowerName+"_event.go")
 		color.Cyan("Generating Event %s...", data.Name)
@@ -593,7 +594,7 @@ var makeListenerCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 		// 1. Generate Listener Logic
 		dest := filepath.Join("backend", "internal", "core", "listeners", data.LowerName+"_listener.go")
 		color.Cyan("Generating Listener %s...", data.Name)
@@ -620,6 +621,33 @@ var makeListenerCmd = &cobra.Command{
 	},
 }
 
+var makeWSBroadcasterCmd = &cobra.Command{
+	Use:   "make:ws-broadcaster [Name]",
+	Short: "Create a new WebSocket event broadcaster",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
+		data := scaffolding.BuildData(name, "")
+		dest := filepath.Join("backend", "internal", "adapters", "websocket", "broadcasters", data.LowerName+"_broadcaster.go")
+
+		color.Cyan("Generating WebSocket broadcaster for %s...", data.Name)
+		if err := scaffolding.Generate("ws_broadcaster.tmpl", dest, data); err != nil {
+			color.Red("Error: %v", err)
+			return
+		}
+
+		color.Green("✨ WebSocket broadcaster %s created! 📡", data.Name)
+		color.Yellow("Next step: Implement the methods in internal/adapters/websocket/broadcasters/%s_broadcaster.go", data.LowerName)
+	},
+}
+
 var makeSeederCmd = &cobra.Command{
 	Use:   "make:seeder [Name]",
 	Short: "Create a new Database Seeder",
@@ -633,7 +661,7 @@ var makeSeederCmd = &cobra.Command{
 			return
 		}
 
-		data := scaffolding.BuildData(name)
+		data := scaffolding.BuildData(name, "")
 
 		// 1. Generate Seeder Logic
 		dest := filepath.Join("backend", "internal", "infrastructure", "database", "seeders", data.LowerName+"_seeder.go")

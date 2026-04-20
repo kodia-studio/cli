@@ -2,44 +2,45 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 
-	"github.com/kodia/framework/backend/internal/core/domain"
-	"github.com/kodia/framework/backend/internal/core/ports"
-	"github.com/kodia/framework/backend/pkg/pagination"
-	"gorm.io/gorm"
+	"github.com/jmoiron/sqlx"
+	"github.com/kodia-studio/kodia/internal/core/domain"
+	"github.com/kodia-studio/kodia/internal/core/ports"
 )
 
 type {{.LowerName}}Repository struct {
-	db *gorm.DB
+	db *sqlx.DB
 }
 
-func New{{.Name}}Repository(db *gorm.DB) ports.{{.Name}}Repository {
+func New{{.Name}}Repository(db *sqlx.DB) ports.{{.Name}}Repository {
 	return &{{.LowerName}}Repository{db: db}
 }
 
-func (r *{{.LowerName}}Repository) FindAll(ctx context.Context, params pagination.Params) ([]domain.{{.Name}}, int64, error) {
-	var items []domain.{{.Name}}
-	var total int64
+func (r *{{.LowerName}}Repository) GetAll(ctx context.Context, params ports.PaginationParams) ([]*domain.{{.Name}}, int, error) {
+	var items []*domain.{{.Name}}
+	var total int
 
-	query := r.db.WithContext(ctx).Model(&domain.{{.Name}}{})
-
-	if err := query.Count(&total).Error; err != nil {
+	query := "SELECT * FROM {{.LowerPlural}} WHERE deleted_at IS NULL LIMIT $1 OFFSET $2"
+	if err := r.db.SelectContext(ctx, &items, query, params.PerPage, params.Offset()); err != nil {
 		return nil, 0, err
 	}
 
-	if err := query.Scopes(pagination.Paginate(&params)).Find(&items).Error; err != nil {
+	if err := r.db.GetContext(ctx, &total, "SELECT count(*) FROM {{.LowerPlural}} WHERE deleted_at IS NULL"); err != nil {
 		return nil, 0, err
 	}
 
 	return items, total, nil
 }
 
-func (r *{{.LowerName}}Repository) FindByID(ctx context.Context, id string) (*domain.{{.Name}}, error) {
+func (r *{{.LowerName}}Repository) GetByID(ctx context.Context, id uint64) (*domain.{{.Name}}, error) {
 	var item domain.{{.Name}}
-	err := r.db.WithContext(ctx).Where("id = ?", id).First(&item).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+	query := "SELECT * FROM {{.LowerPlural}} WHERE id = $1 AND deleted_at IS NULL"
+	if err := r.db.GetContext(ctx, &item, query, id); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrNotFound
 		}
 		return nil, err
@@ -48,13 +49,58 @@ func (r *{{.LowerName}}Repository) FindByID(ctx context.Context, id string) (*do
 }
 
 func (r *{{.LowerName}}Repository) Create(ctx context.Context, item *domain.{{.Name}}) error {
-	return r.db.WithContext(ctx).Create(item).Error
+	query := `
+		INSERT INTO {{.LowerPlural}} (
+			{{- range $i, $f := .Fields}}{{if $i}}, {{end}}{{$f.LowerName}}{{end}}
+		) VALUES (
+			{{- range $i, $f := .Fields}}{{if $i}}, {{end}}${{add $i 1}}{{end}}
+		) RETURNING id, created_at, updated_at`
+
+	err := r.db.QueryRowContext(ctx, query,
+		{{- range .Fields}}
+		item.{{.Name}},
+		{{- end}}
+	).Scan(&item.ID, &item.CreatedAt, &item.UpdatedAt)
+
+	return err
 }
 
 func (r *{{.LowerName}}Repository) Update(ctx context.Context, item *domain.{{.Name}}) error {
-	return r.db.WithContext(ctx).Save(item).Error
+	query := `
+		UPDATE {{.LowerPlural}} SET
+			{{- range $i, $f := .Fields}}{{if $i}}, {{end}}{{$f.LowerName}} = ${{add $i 1}}{{end}},
+			updated_at = CURRENT_TIMESTAMP
+		WHERE id = ${{add (len .Fields) 1}} AND deleted_at IS NULL`
+
+	res, err := r.db.ExecContext(ctx, query,
+		{{- range .Fields}}
+		item.{{.Name}},
+		{{- end}}
+		item.ID,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return domain.ErrNotFound
+	}
+
+	return nil
 }
 
-func (r *{{.LowerName}}Repository) Delete(ctx context.Context, id string) error {
-	return r.db.WithContext(ctx).Where("id = ?", id).Delete(&domain.{{.Name}}{}).Error
+func (r *{{.LowerName}}Repository) Delete(ctx context.Context, id uint64) error {
+	query := "UPDATE {{.LowerPlural}} SET deleted_at = CURRENT_TIMESTAMP WHERE id = $1 AND deleted_at IS NULL"
+	res, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return domain.ErrNotFound
+	}
+
+	return nil
 }

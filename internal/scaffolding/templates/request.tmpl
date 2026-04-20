@@ -1,0 +1,15 @@
+package dto
+
+// Create{{.Name}}Request represents the payload for creating a {{.LowerName}}.
+type Create{{.Name}}Request struct {
+	{{- range .Fields}}
+	{{.Name}} {{.GoType}} `json:"{{.LowerName}}" binding:"{{.Validation}}"`
+	{{- end}}
+}
+
+// Update{{.Name}}Request represents the payload for updating a {{.LowerName}}.
+type Update{{.Name}}Request struct {
+	{{- range .Fields}}
+	{{.Name}} {{.GoType}} `json:"{{.LowerName}}" binding:"{{if not (contains .Validation "required")}}omitempty,{{end}}{{.Validation}}"`
+	{{- end}}
+}

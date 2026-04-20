@@ -98,14 +98,28 @@ func TestBuildDataStructure(t *testing.T) {
 			expectedLower:  "category",
 			expectedPlural: "Categories",
 		},
+		{
+			name:           "with fields",
+			input:          "Post",
+			expectedName:   "Post",
+			expectedLower:  "post",
+			expectedPlural: "Posts",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data := BuildData(tt.input)
+			fields := ""
+			if tt.name == "with fields" {
+				fields = "title:string,body:text"
+			}
+			data := BuildData(tt.input, fields)
 
 			if data.Name != tt.expectedName {
 				t.Errorf("Name: got %s, want %s", data.Name, tt.expectedName)
+			}
+			if tt.name == "with fields" && len(data.Fields) != 2 {
+				t.Errorf("Fields: got %d, want 2", len(data.Fields))
 			}
 			if data.LowerName != tt.expectedLower {
 				t.Errorf("LowerName: got %s, want %s", data.LowerName, tt.expectedLower)

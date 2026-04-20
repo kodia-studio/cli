@@ -3,9 +3,8 @@ package services
 import (
 	"context"
 
-	"github.com/kodia/framework/backend/internal/core/domain"
-	"github.com/kodia/framework/backend/internal/core/ports"
-	"github.com/kodia/framework/backend/pkg/pagination"
+	"github.com/kodia-studio/kodia/internal/core/domain"
+	"github.com/kodia-studio/kodia/internal/core/ports"
 	"go.uber.org/zap"
 )
 
@@ -21,18 +20,24 @@ func New{{.Name}}Service(repo ports.{{.Name}}Repository, log *zap.Logger) ports.
 	}
 }
 
-func (s *{{.LowerName}}Service) GetAll(ctx context.Context, params pagination.Params) ([]domain.{{.Name}}, int64, error) {
-	return s.repo.FindAll(ctx, params)
+func (s *{{.LowerName}}Service) GetAll(ctx context.Context, params ports.PaginationParams) ([]*domain.{{.Name}}, int, error) {
+	return s.repo.GetAll(ctx, params)
 }
 
-func (s *{{.LowerName}}Service) GetByID(ctx context.Context, id string) (*domain.{{.Name}}, error) {
-	return s.repo.FindByID(ctx, id)
+func (s *{{.LowerName}}Service) GetByID(ctx context.Context, id uint64) (*domain.{{.Name}}, error) {
+	return s.repo.GetByID(ctx, id)
 }
 
-func (s *{{.LowerName}}Service) Delete(ctx context.Context, id string) error {
-	_, err := s.repo.FindByID(ctx, id)
-	if err != nil {
-		return err
-	}
+func (s *{{.LowerName}}Service) Create(ctx context.Context, item *domain.{{.Name}}) error {
+	// Add business logic/validation here
+	return s.repo.Create(ctx, item)
+}
+
+func (s *{{.LowerName}}Service) Update(ctx context.Context, item *domain.{{.Name}}) error {
+	// Add business logic/validation here
+	return s.repo.Update(ctx, item)
+}
+
+func (s *{{.LowerName}}Service) Delete(ctx context.Context, id uint64) error {
 	return s.repo.Delete(ctx, id)
 }

@@ -1,8 +1,15 @@
-CREATE TABLE IF NOT EXISTS {{.LowerPlural}} (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+CREATE TABLE {{.LowerPlural}} (
+    id BIGSERIAL PRIMARY KEY,
+    {{- range .Fields}}
+    {{.LowerName}} {{.SQLType}}{{if .IsUnique}} UNIQUE{{end}}{{if not .IsNullable}} NOT NULL{{end}},
+    {{- end}}
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_{{.LowerPlural}}_deleted_at ON {{.LowerPlural}}(deleted_at);
+{{range .Fields}}{{if .IsRefs}}
+-- Index and FK for {{.LowerName}}
+CREATE INDEX idx_{{$.LowerPlural}}_{{.LowerName}} ON {{$.LowerPlural}}({{.LowerName}});
+ALTER TABLE {{$.LowerPlural}} ADD CONSTRAINT fk_{{$.LowerPlural}}_{{.LowerName}} FOREIGN KEY ({{.LowerName}}) REFERENCES {{.RefTable}}(id) ON DELETE CASCADE;
+{{end}}{{end}}

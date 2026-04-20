@@ -1,0 +1,36 @@
+package resources
+
+import (
+    "github.com/kodia-studio/kodia/internal/core/domain"
+)
+
+// {{.Name}}Resource represents the public API response for a {{.Name}}.
+type {{.Name}}Resource struct {
+	ID        uint64 `json:"id"`
+	{{- range .Fields}}
+	{{.Name}} {{.GoType}} `json:"{{.LowerName}}"`
+	{{- end}}
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+// New{{.Name}}Resource transforms a domain entity into a public resource.
+func New{{.Name}}Resource(m *domain.{{.Name}}) *{{.Name}}Resource {
+	return &{{.Name}}Resource{
+		ID:        m.ID,
+		{{- range .Fields}}
+		{{.Name}}: m.{{.Name}},
+		{{- end}}
+		CreatedAt: m.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		UpdatedAt: m.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}
+}
+
+// New{{.Name}}Collection transforms a slice of domain entities.
+func New{{.Name}}Collection(ms []*domain.{{.Name}}) []*{{.Name}}Resource {
+	resources := make([]*{{.Name}}Resource, len(ms))
+	for i, m := range ms {
+		resources[i] = New{{.Name}}Resource(m)
+	}
+	return resources
+}

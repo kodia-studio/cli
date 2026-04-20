@@ -180,10 +180,55 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		"success": true,
 		"message": "Profile retrieved",
 		"data": gin.H{
-			"user_id": userID,
-			"role":    middleware.GetUserRole(c),
+			"user_id":     userID,
+			"role":        middleware.GetUserRole(c),
+			"permissions": middleware.GetUserPermissions(c),
 		},
 	})
+}
+
+// Setup2FA godoc
+// @Summary      Setup 2FA
+// @Description  Generate a new TOTP secret and QR code for the user
+// @Tags         auth
+// @Security     BearerAuth
+// @Success      200 {object} response.Response{data=dto.TwoFactorSetupResponse}
+// @Router       /api/auth/2fa/setup [post]
+func (h *AuthHandler) Setup2FA(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	result, err := h.authService.Setup2FA(c.Request.Context(), userID)
+	if err != nil {
+		h.log.Error("Failed to setup 2FA", zap.Error(err))
+		response.InternalServerError(c, "Failed to initialize 2FA setup")
+		return
+	}
+
+	response.OK(c, "2FA setup initialized", result)
+}
+
+// Verify2FA godoc
+// @Summary      Verify 2FA
+// @Description  Verify and enable 2FA for the user account
+// @Tags         auth
+// @Security     BearerAuth
+// @Param        body body dto.Verify2FARequest true "Verification code"
+// @Success      200 {object} response.Response
+// @Router       /api/auth/2fa/verify [post]
+func (h *AuthHandler) Verify2FA(c *gin.Context) {
+	var req dto.Verify2FARequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.BadRequest(c, "Invalid request body", nil)
+		return
+	}
+
+	userID := middleware.GetUserID(c)
+	err := h.authService.VerifyAndEnable2FA(c.Request.Context(), userID, req.Code)
+	if err != nil {
+		response.Unauthorized(c, "Invalid verification code")
+		return
+	}
+
+	response.OK(c, "2FA enabled successfully", nil)
 }
 
 // handleAuthError maps domain errors to appropriate HTTP responses.

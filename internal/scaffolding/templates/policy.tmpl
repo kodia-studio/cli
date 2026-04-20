@@ -1,0 +1,29 @@
+package policies
+
+import (
+	"context"
+	"github.com/kodia-studio/kodia/internal/core/domain"
+)
+
+// {{.Name}}Policy handles authorization for {{.Name}} entities.
+type {{.Name}}Policy struct{}
+
+func New{{.Name}}Policy() *{{.Name}}Policy {
+	return &{{.Name}}Policy{}
+}
+
+// CanView checks if a user can view a specific {{.LowerName}}.
+func (p *{{.Name}}Policy) CanView(ctx context.Context, user *domain.User, {{.LowerName}} *domain.{{.Name}}) bool {
+	// Add your authorization logic here
+	return true
+}
+
+// CanCreate checks if a user can create a {{.LowerName}}.
+func (p *{{.Name}}Policy) CanCreate(ctx context.Context, user *domain.User) bool {
+	return true
+}
+
+// CanUpdate checks if a user can update a specific {{.LowerName}}.
+func (p *{{.Name}}Policy) CanUpdate(ctx context.Context, user *domain.User, {{.LowerName}} *domain.{{.Name}}) bool {
+	return user.ID == {{.LowerName}}.UserID // Example ABAC
+}
