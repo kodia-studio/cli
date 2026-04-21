@@ -21,8 +21,9 @@ var installCmd = &cobra.Command{
 
 		// PoC Registry: map plugin names to their local/remote paths
 		registry := map[string]string{
-			"payment": "github.com/kodia-studio/payment",
-			"search":  "github.com/kodia-studio/search",
+			"payment":      "github.com/kodia-studio/payment",
+			"search":       "github.com/kodia-studio/search",
+			"authsocial":   "github.com/kodia-studio/authsocial",
 		}
 
 		repoPath, ok := registry[pluginName]
