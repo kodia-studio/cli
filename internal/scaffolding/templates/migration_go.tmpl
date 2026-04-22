@@ -1,0 +1,21 @@
+package migrations
+
+import (
+	"github.com/kodia-studio/kodia/pkg/database"
+)
+
+// Migration_{{.Timestamp}} handles the creation of the {{.LowerPlural}} table.
+type Migration_{{.Timestamp}} struct{}
+
+func (m *Migration_{{.Timestamp}}) Up(schema *database.Schema) error {
+	return schema.Create("{{.LowerPlural}}", func(table *database.Blueprint) {
+		table.ID()
+		table.String("name")
+		table.Timestamps()
+		table.SoftDeletes()
+	})
+}
+
+func (m *Migration_{{.Timestamp}}) Down(schema *database.Schema) error {
+	return schema.Drop("{{.LowerPlural}}")
+}

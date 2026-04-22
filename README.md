@@ -44,6 +44,12 @@ mv kodia /usr/local/bin/ # Or add to your PATH
 # Generate a full vertical slice module
 kodia make:module Product
 
+# Generate a Go-based migration using the Elite Schema Builder
+kodia make:migration CreateUsersTable
+
+# Generate a model factory for realistic dummy data
+kodia make:factory User
+
 # Secure your application by generating secure cryptographic keys
 kodia key:generate
 ```

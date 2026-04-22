@@ -136,7 +136,7 @@ var makePageCmd = &cobra.Command{
 
 var makeMigrationCmd = &cobra.Command{
 	Use:   "make:migration [table_name]",
-	Short: "Create up/down SQL migration files",
+	Short: "Create a new Go-based migration file using Schema Builder",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		name := args[0]
@@ -149,13 +149,39 @@ var makeMigrationCmd = &cobra.Command{
 
 		data := scaffolding.BuildData(name, "")
 		
-		baseDest := filepath.Join("backend", "internal", "infrastructure", "database", "migrations", "sql")
-		upDest := filepath.Join(baseDest, data.Timestamp+"_create_"+data.LowerPlural+"_table.up.sql")
-		downDest := filepath.Join(baseDest, data.Timestamp+"_create_"+data.LowerPlural+"_table.down.sql")
+		dest := filepath.Join("backend", "internal", "infrastructure", "database", "migrations", "go", data.Timestamp+"_create_"+data.LowerPlural+"_table.go")
 		
-		color.Cyan("Generating migrations for %s...", data.LowerPlural)
-		scaffolding.Generate("migration_up.tmpl", upDest, data)
-		scaffolding.Generate("migration_down.tmpl", downDest, data)
+		color.Cyan("Generating migration for %s...", data.LowerPlural)
+		if err := scaffolding.Generate("migration_go.tmpl", dest, data); err != nil {
+			color.Red("Error: %v", err)
+		} else {
+			color.Green("✨ Migration created! Edit at internal/infrastructure/database/migrations/go/%s", filepath.Base(dest))
+		}
+	},
+}
+
+var makeFactoryCmd = &cobra.Command{
+	Use:   "make:factory [ModelName]",
+	Short: "Create a new model factory for testing",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
+		data := scaffolding.BuildData(name, "")
+		dest := filepath.Join("backend", "internal", "database", "factories", data.LowerName+"_factory.go")
+		
+		color.Cyan("Generating factory for %s...", data.Name)
+		if err := scaffolding.Generate("factory.tmpl", dest, data); err != nil {
+			color.Red("Error: %v", err)
+		} else {
+			color.Green("✨ Factory created! Customize it at internal/database/factories/%s_factory.go", data.LowerName)
+		}
 	},
 }
 
@@ -560,6 +586,7 @@ func init() {
 	rootCmd.AddCommand(makeListenerCmd)
 	rootCmd.AddCommand(makeWSBroadcasterCmd)
 	rootCmd.AddCommand(makeSeederCmd)
+	rootCmd.AddCommand(makeFactoryCmd)
 }
 
 var makeMailCmd = &cobra.Command{
