@@ -483,6 +483,60 @@ var makeTestCmd = &cobra.Command{
 	},
 }
 
+var makeModuleCmd = &cobra.Command{
+	Use:   "make:module [Name]",
+	Short: "Scaffold a complete domain module (Model, Handler, Service, Repo, DB, Tests)",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+
+		// Validate name to prevent code injection
+		if err := validation.ValidateName(name); err != nil {
+			color.Red("Error: Invalid name - %v", err)
+			return
+		}
+
+		color.Magenta("🏗️  Building Module Slice: %s", name)
+		
+		// Run all generators
+		makeModelCmd.Run(cmd, args)
+		makeHandlerCmd.Run(cmd, args)
+		makeServiceCmd.Run(cmd, args)
+		makeRepositoryCmd.Run(cmd, args)
+		makeMigrationCmd.Run(cmd, args)
+		
+		data := scaffolding.BuildData(name, "")
+		
+		// Generate Tests
+		color.Cyan("🧪 Generating unit tests...")
+		if err := scaffolding.Generate("service_test.tmpl", filepath.Join("backend", "internal", "core", "services", data.LowerName+"_service_test.go"), data); err != nil {
+			color.Red("Error generating service test: %v", err)
+		}
+		if err := scaffolding.Generate("handler_test.tmpl", filepath.Join("backend", "internal", "adapters", "http", "handlers", data.LowerName+"_handler_test.go"), data); err != nil {
+			color.Red("Error generating handler test: %v", err)
+		}
+
+		// Auto-wiring magic
+		color.Cyan("🪄  Performing auto-wiring magic...")
+		
+		mainPath := filepath.Join("backend", "cmd", "server", "main.go")
+		if err := astutil.InjectDependencyInjection(mainPath, data); err != nil {
+			color.Red("⚠️  Auto-wiring failed for main.go: %v", err)
+		} else {
+			color.Green("✅ Dependency injection registered in main.go")
+		}
+
+		routerPath := filepath.Join("backend", "internal", "adapters", "http", "router.go")
+		if err := astutil.InjectRouteRegistration(routerPath, data); err != nil {
+			color.Red("⚠️  Auto-wiring failed for router.go: %v", err)
+		} else {
+			color.Green("✅ Routes registered in router.go")
+		}
+
+		color.Magenta("✨ Module %s fully scaffolded and wired! 🚀", name)
+	},
+}
+
 func init() {
 	// Register commands to the root command directly so users can just do `kodia make:handler` instead of `kodia make handler`
 	rootCmd.AddCommand(makeHandlerCmd)
@@ -492,6 +546,7 @@ func init() {
 	rootCmd.AddCommand(makeMigrationCmd)
 	rootCmd.AddCommand(makePageCmd)
 	rootCmd.AddCommand(makeFeatureCmd)
+	rootCmd.AddCommand(makeModuleCmd) // Registered new command
 	rootCmd.AddCommand(makeAuthCmd)
 	rootCmd.AddCommand(makeMiddlewareCmd)
 	rootCmd.AddCommand(makeValidatorCmd)

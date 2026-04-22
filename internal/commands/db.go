@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var dbMigrateCmd = &cobra.Command{
-	Use:   "db:migrate",
+var migrateCmd = &cobra.Command{
+	Use:   "migrate",
 	Short: "Run all pending database migrations",
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Cyan("Running UP database migrations...")
@@ -18,8 +18,8 @@ var dbMigrateCmd = &cobra.Command{
 	},
 }
 
-var dbRollbackCmd = &cobra.Command{
-	Use:   "db:rollback",
+var migrateRollbackCmd = &cobra.Command{
+	Use:   "migrate:rollback",
 	Short: "Rollback database migrations",
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Cyan("Running DOWN database migrations...")
@@ -36,22 +36,22 @@ var dbSeedCmd = &cobra.Command{
 	},
 }
 
+var migrateStatusCmd = &cobra.Command{
+	Use:   "migrate:status",
+	Short: "Show pending and applied migrations",
+	Run: func(cmd *cobra.Command, args []string) {
+		color.Cyan("Checking migration status...")
+		color.Yellow("Tip: Run 'kodia migrate' to apply pending migrations")
+		runDbCommand("make", "db-status")
+	},
+}
+
 var dbFreshCmd = &cobra.Command{
 	Use:   "db:fresh",
 	Short: "Drop all tables and re-run all migrations",
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Yellow("⚠️  This will drop all tables. Are you sure? (no confirmation, use with caution)")
 		runDbCommand("make", "db-fresh")
-	},
-}
-
-var dbStatusCmd = &cobra.Command{
-	Use:   "db:status",
-	Short: "Show pending and applied migrations",
-	Run: func(cmd *cobra.Command, args []string) {
-		color.Cyan("Checking migration status...")
-		color.Yellow("Tip: Run 'kodia db:migrate' to apply pending migrations")
-		runDbCommand("make", "db-status")
 	},
 }
 
@@ -118,11 +118,12 @@ func runDbCommand(command string, args ...string) {
 }
 
 func init() {
-	rootCmd.AddCommand(dbMigrateCmd)
-	rootCmd.AddCommand(dbRollbackCmd)
+	// Register commands to the root command directly
+	rootCmd.AddCommand(migrateCmd)
+	rootCmd.AddCommand(migrateRollbackCmd)
+	rootCmd.AddCommand(migrateStatusCmd)
 	rootCmd.AddCommand(dbSeedCmd)
 	rootCmd.AddCommand(dbFreshCmd)
-	rootCmd.AddCommand(dbStatusCmd)
 	rootCmd.AddCommand(dbResetCmd)
 	rootCmd.AddCommand(devCmd)
 }

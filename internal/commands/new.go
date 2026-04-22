@@ -74,14 +74,32 @@ var newCmd = &cobra.Command{
 		s.Stop()
 		color.Green("✅ Project refactored successfully!")
 
+		// 5. Setup .env
+		s.Suffix = "  Setting up environment variables..."
+		s.Restart()
+		envExamplePath := filepath.Join(projectPath, "backend", ".env.example")
+		envPath := filepath.Join(projectPath, "backend", ".env")
+		if _, err := os.Stat(envExamplePath); err == nil {
+			input, _ := os.ReadFile(envExamplePath)
+			os.WriteFile(envPath, input, 0644)
+			s.Stop()
+			color.Green("✅ .env file created from .env.example")
+		} else {
+			s.Stop()
+			color.Yellow("⚠️  .env.example not found, skipping .env setup")
+		}
+
 		fmt.Println()
-		color.Yellow("Next steps:")
+		color.Magenta("✨ Success! Your Kodia project is ready. 🚀")
+		fmt.Println()
+		color.Cyan("Quick Start:")
 		fmt.Printf("  1. cd %s\n", projectName)
-		fmt.Printf("  2. Configure your .env file in backend/\n")
-		fmt.Printf("  3. cd frontend && npm install && cd ..\n")
-		fmt.Printf("  4. kodia dev\n")
+		fmt.Printf("  2. kodia key:generate   " + color.HiBlackString("(Run this to secure your app)") + "\n")
+		fmt.Printf("  3. kodia sail up        " + color.HiBlackString("(Start database & services)") + "\n")
+		fmt.Printf("  4. kodia dev            " + color.HiBlackString("(Start development mode)") + "\n")
 		fmt.Println()
-		color.Cyan("Happy coding with Kodia! 🐨")
+		color.HiBlack("For detailed documentation, visit: http://localhost:5173/docs")
+		fmt.Println()
 	},
 }
 

@@ -32,50 +32,44 @@ mv kodia /usr/local/bin/ # Or add to your PATH
 
 ## 🚀 Core Commands
 
-### 1. Project Management
+### 1. Project Management & Testing
 - `kodia new <project-name>`: Scaffolds a new professional fullstack application (Go + SvelteKit).
-- `kodia sail up`: Launches your development infrastructure (Postgres, Redis, Meilisearch, Mailpit) using Docker.
-- `kodia sail down`: Stops and removes the development infrastructure containers.
-- `kodia serve [--watch]`: Starts the developmental server with automatic hot-reload for the backend.
-- `kodia tinker`: Opens an interactive REPL shell to test your business logic and database queries in real-time.
+- `kodia test`: Run all backend and frontend tests in the project.
+- `kodia test:coverage [--html]`: Generate and view a comprehensive coverage report.
+- `kodia shell`: Opens an interactive Go REPL shell to test your business logic in real-time.
+- `kodia route:list`: Display a beautiful map of all registered API routes.
 
-### 2. Artisanal Scaffolding (`generate`)
-Kodia features a powerful generation engine to keep your arsitektur clean and consistent.
-
+### 2. Pro Scaffolding & Security
 ```bash
-# Generate a full CRUD resource
-kodia generate crud users --fields=name:string,email:string,role:enum
+# Generate a full vertical slice module
+kodia make:module Product
 
-# Individual components
-kodia generate model Post title:string body:text author:references:User
-kodia generate migration AddStatusToUsers
-kodia generate event UserCreated
-kodia generate listener SendWelcomeEmail --event=UserCreated
-kodia generate policy UserPolicy
-kodia generate test Feature/AuthenticationTest --type=feature
+# Secure your application by generating secure cryptographic keys
+kodia key:generate
 ```
 
-### 3. Plugin Ecosystem (`plugin`)
-Manage official and community-built extensions to keep your core framework lightweight.
+### 3. Build & Deployment (`build`)
+Kodia features a world-class build pipeline that bundles your entire stack into a single file.
 
 ```bash
-# Install an external plugin
-kodia plugin install payment
+# Compile backend and frontend into a single production-ready binary
+kodia build
 ```
 
-### 4. Database Management (`db`)
-- `kodia db:migrate`: Run pending migrations.
-- `kodia db:rollback`: Roll back the last migration.
-- `kodia db:seed`: Seed the database with fake data using artisanal seeders.
+### 4. Database & Environment (`migrate`, `env`)
+- `kodia migrate`: Run all pending database migrations.
+- `kodia env:set KEY=VALUE`: Securely update your application configuration.
+- `kodia env:list`: View all environment variables (with sensitive data masked).
+- `kodia db:seed`: Populate the database with dummy data.
 
 ---
 
 ## 🏗️ Architecture Focus
 
-Unlike generic generators, the Kodia CLI produces **Modular Architecture** compliant code:
+Kodia CLI produces **Elite Modular Architecture** compliant code:
 - **Separation of Concerns**: Logic is divided into Handlers, Services, and Repositories.
-- **Type Safety**: Automatically generates strongly-typed DTOs and GORM models.
-- **Professional Patterns**: Implements Dependency Injection in every generated component.
+- **Type Safety**: Strongly-typed DTOs and GORM models.
+- **Pro Auto-Wiring**: Automatically registers your new modules in `main.go` and `router.go`.
 
 ---
 
