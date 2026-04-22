@@ -76,6 +76,12 @@ Kodia CLI produces **Elite Modular Architecture** compliant code:
 - **Separation of Concerns**: Logic is divided into Handlers, Services, and Repositories.
 - **Type Safety**: Strongly-typed DTOs and GORM models.
 - **Pro Auto-Wiring**: Automatically registers your new modules in `main.go` and `router.go`.
+- **Elite HTTP & API Layer**: Integrated support for:
+    - **Fluent DTO Binding**: One-step request parsing and validation.
+    - **API Resources**: Laravel-style JSON transformation layer.
+    - **Versioning**: Ready-to-use `/v1` routing pattern.
+    - **OpenAPI/Swagger**: Automatic interactive API documentation.
+    - **Secure Webhooks**: HMAC-signed outbound notifications with audit history.
 
 ---
 
