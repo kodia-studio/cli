@@ -68,6 +68,21 @@ var devCmd = &cobra.Command{
 	Use:   "dev",
 	Short: "Start development servers with auto-reload",
 	Run: func(cmd *cobra.Command, args []string) {
+		// Check if Makefile exists
+		if _, err := os.Stat("Makefile"); os.IsNotExist(err) {
+			color.Red("❌ Makefile not found. Make sure you are in the project root directory.")
+			color.Yellow("   cd my-app && kodia dev")
+			return
+		}
+
+		// Check if 'make' is installed
+		if _, err := exec.LookPath("make"); err != nil {
+			color.Red("❌ 'make' is not installed. Please install build tools.")
+			color.Yellow("   macOS: brew install make")
+			color.Yellow("   Ubuntu/Debian: sudo apt-get install build-essential")
+			return
+		}
+
 		color.Magenta("🚀 Starting Kodia Development Servers...")
 		color.HiBlack("Backend (auto-reload) + Frontend (SvelteKit)\n")
 

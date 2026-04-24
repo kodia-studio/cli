@@ -58,7 +58,7 @@ var newCmd = &cobra.Command{
 		color.Green("✅ Fresh Git repository initialized!")
 
 		// 4. Update module name and imports automatically
-		newModuleName := "github.com/kodia-studio/" + projectName
+		newModuleName := projectName
 		s.Suffix = "  Updating module name and imports..."
 		s.Restart()
 		
@@ -69,7 +69,9 @@ var newCmd = &cobra.Command{
 		}
 		
 		// Run go mod tidy
-		exec.Command("go", "-C", filepath.Join(projectPath, "backend"), "mod", "tidy").Run()
+		if err := exec.Command("go", "-C", filepath.Join(projectPath, "backend"), "mod", "tidy").Run(); err != nil {
+			color.Yellow("⚠️  go mod tidy failed, but continuing...")
+		}
 		
 		s.Stop()
 		color.Green("✅ Project refactored successfully!")
@@ -94,8 +96,8 @@ var newCmd = &cobra.Command{
 		fmt.Println()
 		color.Cyan("Quick Start:")
 		fmt.Printf("  1. cd %s\n", projectName)
-		fmt.Printf("  2. kodia key:generate   " + color.HiBlackString("(Secure your app with encryption keys)") + "\n")
-		fmt.Printf("  3. kodia dev            " + color.HiBlackString("(Start development server)") + "\n")
+		fmt.Print("  2. kodia key:generate   " + color.HiBlackString("(Secure your app with encryption keys)") + "\n")
+		fmt.Print("  3. kodia dev            " + color.HiBlackString("(Start development server)") + "\n")
 		fmt.Println()
 		color.HiBlack("Database: SQLite is already configured and ready to use!")
 		fmt.Println()

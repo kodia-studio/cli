@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/template"
 	"time"
+	"unicode"
 
 	"github.com/fatih/color"
 )
@@ -131,9 +132,9 @@ func ParseFields(raw string) []Field {
 
 		name := fieldParts[0]
 		fieldType := fieldParts[1]
-		
+
 		field := Field{
-			Name:      strings.Title(name),
+			Name:      capitalizeFirst(name),
 			LowerName: strings.ToLower(name),
 			Type:      fieldType,
 		}
@@ -213,4 +214,13 @@ func ParseFields(raw string) []Field {
 	}
 
 	return fields
+}
+
+func capitalizeFirst(s string) string {
+	if s == "" {
+		return s
+	}
+	r := []rune(s)
+	r[0] = unicode.ToUpper(r[0])
+	return string(r)
 }
