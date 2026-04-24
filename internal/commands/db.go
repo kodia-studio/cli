@@ -66,10 +66,10 @@ var dbResetCmd = &cobra.Command{
 
 var devCmd = &cobra.Command{
 	Use:   "dev",
-	Short: "Start both backend and frontend development servers",
+	Short: "Start development servers with auto-reload",
 	Run: func(cmd *cobra.Command, args []string) {
-		color.Magenta("Starting Kodia Framework Development Mode 🚀")
-		color.Yellow("Note: You must have 'make' and 'docker' installed.")
+		color.Magenta("🚀 Starting Kodia Development Servers...")
+		color.HiBlack("Backend (auto-reload) + Frontend (SvelteKit)\n")
 
 		execCmd := exec.Command("make", "dev")
 		execCmd.Stdout = os.Stdout
