@@ -82,11 +82,19 @@ var newCmd = &cobra.Command{
 		backendEnvExamplePath := filepath.Join(projectPath, "backend", ".env.example")
 		backendEnvPath := filepath.Join(projectPath, "backend", ".env")
 		if _, err := os.Stat(backendEnvExamplePath); err == nil {
-			input, _ := os.ReadFile(backendEnvExamplePath)
-			os.WriteFile(backendEnvPath, input, 0644)
-			color.Green("✅ Backend .env file created from .env.example")
+			input, readErr := os.ReadFile(backendEnvExamplePath)
+			if readErr == nil {
+				writeErr := os.WriteFile(backendEnvPath, input, 0644)
+				if writeErr == nil {
+					color.Green("✅ Backend .env file created from .env.example")
+				} else {
+					color.Yellow("⚠️  Failed to write backend .env: %v", writeErr)
+				}
+			} else {
+				color.Yellow("⚠️  Failed to read backend .env.example: %v", readErr)
+			}
 		} else {
-			color.Yellow("⚠️  Backend .env.example not found, skipping .env setup")
+			color.Yellow("⚠️  Backend .env.example not found at: %s", backendEnvExamplePath)
 		}
 
 		// 6. Setup .env for frontend
@@ -95,13 +103,23 @@ var newCmd = &cobra.Command{
 		frontendEnvExamplePath := filepath.Join(projectPath, "frontend", ".env.example")
 		frontendEnvPath := filepath.Join(projectPath, "frontend", ".env")
 		if _, err := os.Stat(frontendEnvExamplePath); err == nil {
-			input, _ := os.ReadFile(frontendEnvExamplePath)
-			os.WriteFile(frontendEnvPath, input, 0644)
-			s.Stop()
-			color.Green("✅ Frontend .env file created from .env.example")
+			input, readErr := os.ReadFile(frontendEnvExamplePath)
+			if readErr == nil {
+				writeErr := os.WriteFile(frontendEnvPath, input, 0644)
+				if writeErr == nil {
+					s.Stop()
+					color.Green("✅ Frontend .env file created from .env.example")
+				} else {
+					s.Stop()
+					color.Yellow("⚠️  Failed to write frontend .env: %v", writeErr)
+				}
+			} else {
+				s.Stop()
+				color.Yellow("⚠️  Failed to read frontend .env.example: %v", readErr)
+			}
 		} else {
 			s.Stop()
-			color.Yellow("⚠️  Frontend .env.example not found, skipping frontend .env setup")
+			color.Yellow("⚠️  Frontend .env.example not found at: %s", frontendEnvExamplePath)
 		}
 
 		fmt.Println()
