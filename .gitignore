@@ -1,0 +1,80 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+*.mach_o_header
+kodia-cli
+kodia-cli-*
+bin/kodia
+kodia/kodia
+kodia/main
+
+# Test binaries
+*.test
+
+# Output of the go coverage tool
+*.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories (remove the comment below to include it)
+vendor/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.iml
+.DS_Store
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.AppleDouble
+.LSOverride
+Thumbs.db
+Desktop.ini
+
+# Build artifacts
+*.o
+*.a
+*.so
+dist/
+build/
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.orig
+
+# IDE specific
+.vscode/settings.json
+.idea/workspace.xml
+.idea/tasks.xml
+
+# Local development
+local/
+tmp/
+temp/
+
+# Backend/migrations (belongs in kodia framework, not cli)
+backend/
