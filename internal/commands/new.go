@@ -41,23 +41,56 @@ var newCmd = &cobra.Command{
 
 		s.Suffix = "  Cleaning up template files..."
 		s.Restart()
-		
-		// 2. Remove .git to start fresh
+
+		// 2. Remove unwanted directories and files
+		foldersToRemove := []string{
+			".github",
+			"docs",
+			"k8s",
+			"nginx",
+			"plugins",
+		}
+		filesToRemove := []string{
+			".env.example",
+			"CHANGELOG.md",
+			"CONTRIBUTING.md",
+			"Makefile",
+			"docker-compose.yml",
+			"docker-compose.prod.yml",
+		}
+
+		// Remove folders
+		for _, folder := range foldersToRemove {
+			folderPath := filepath.Join(projectPath, folder)
+			if err := os.RemoveAll(folderPath); err != nil {
+				color.Yellow("⚠️  Failed to remove %s: %v", folder, err)
+			}
+		}
+
+		// Remove files
+		for _, file := range filesToRemove {
+			filePath := filepath.Join(projectPath, file)
+			if err := os.Remove(filePath); err != nil && !os.IsNotExist(err) {
+				color.Yellow("⚠️  Failed to remove %s: %v", file, err)
+			}
+		}
+
+		// 3. Remove .git to start fresh
 		os.RemoveAll(filepath.Join(projectPath, ".git"))
 		
 		s.Stop()
-		
+
 		s.Suffix = "  Initializing new Git repository..."
 		s.Restart()
-		
-		// 3. Init new git
+
+		// 4. Init new git
 		exec.Command("git", "-C", projectPath, "init").Run()
-		
+
 		time.Sleep(500 * time.Millisecond)
 		s.Stop()
 		color.Green("✅ Fresh Git repository initialized!")
 
-		// 4. Update module name and imports automatically
+		// 5. Update module name and imports automatically
 		newModuleName := projectName
 		s.Suffix = "  Updating module name and imports..."
 		s.Restart()
@@ -76,7 +109,7 @@ var newCmd = &cobra.Command{
 		s.Stop()
 		color.Green("✅ Go module name updated successfully!")
 
-		// 5. Setup .env for backend
+		// 6. Setup .env for backend
 		s.Suffix = "  Setting up environment variables..."
 		s.Restart()
 		backendEnvExamplePath := filepath.Join(projectPath, "backend", ".env.example")
@@ -97,7 +130,7 @@ var newCmd = &cobra.Command{
 			color.Yellow("⚠️  Backend .env.example not found at: %s", backendEnvExamplePath)
 		}
 
-		// 6. Setup .env for frontend
+		// 7. Setup .env for frontend
 		s.Suffix = "  Setting up frontend environment variables..."
 		s.Restart()
 		frontendEnvExamplePath := filepath.Join(projectPath, "frontend", ".env.example")
