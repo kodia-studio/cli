@@ -14,7 +14,7 @@ var migrateCmd = &cobra.Command{
 	Short: "Run all pending database migrations",
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Cyan("Running UP database migrations...")
-		runDbCommand("make", "migrate-up")
+		runDbCommand("make", "migrate-fresh")
 	},
 }
 
@@ -23,7 +23,7 @@ var migrateRollbackCmd = &cobra.Command{
 	Short: "Rollback database migrations",
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Cyan("Running DOWN database migrations...")
-		runDbCommand("make", "migrate-down")
+		runDbCommand("make", "migrate-rollback")
 	},
 }
 
@@ -42,7 +42,7 @@ var migrateStatusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Cyan("Checking migration status...")
 		color.Yellow("Tip: Run 'kodia migrate' to apply pending migrations")
-		runDbCommand("make", "db-status")
+		runDbCommand("make", "migrate-status")
 	},
 }
 
@@ -51,7 +51,7 @@ var dbFreshCmd = &cobra.Command{
 	Short: "Drop all tables and re-run all migrations",
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Yellow("⚠️  This will drop all tables. Are you sure? (no confirmation, use with caution)")
-		runDbCommand("make", "db-fresh")
+		runDbCommand("make", "migrate-fresh")
 	},
 }
 
@@ -60,7 +60,7 @@ var dbResetCmd = &cobra.Command{
 	Short: "Rollback all, re-run migrations, and seed the database",
 	Run: func(cmd *cobra.Command, args []string) {
 		color.Yellow("⚠️  Resetting database: rollback → migrate → seed")
-		runDbCommand("make", "db-reset")
+		runDbCommand("make", "migrate-reset")
 	},
 }
 
